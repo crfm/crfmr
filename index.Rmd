@@ -8,5 +8,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Preamble
 
-...
+#### The source
 
+A reproducible source of this space is found on [github](https://github.com/crfm/crfmr). To get it to on your own computer simply do (within Linux):
+
+```
+git clone https://github.com/crfm/crfmr.git
+```
+
+If on Windows there are some buttons on the github page which can be pushed.
+
+#### Intstalling R and RStudio
+
+* Latest version of __R__ can be found under the [The Comprehensive R Archive Network](https://cran.r-project.org/)
+* If your platform is Windows it adviced to also install [Rtools](https://cran.r-project.org/bin/windows/Rtools)
+* Latest version of __RStudio__: see [RStudio Desktop](https://www.rstudio.com/products/rstudio/download/)
+    * If you are adventurous install the latest [developmental version](https://www.rstudio.com/products/rstudio/download/preview)
+
+For those that want to get a head we recommend the following reads:
+
+  * [R for Data Science](http://r4ds.had.co.nz)
+  * [A rendered version of the new ggplot2 book](http://www.hafro.is/~einarhj/education/ggplot2)
