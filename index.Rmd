@@ -18,9 +18,9 @@ THIS IS SPACE IN PROGRESS - so keep calm
 
 #### [Getting data into R](importing.html)
 
-#### [Grammar of plotting - staring with ggplot2](ggplot2.html)
+#### [Grammar of data visualization - staring with ggplot2](ggplot2.html)
 
-#### [Grammar of data - starting with dplyr](dplyr.html)
+#### [Grammar of data manipulation - starting with dplyr](dplyr.html)
 
 #### ...
 

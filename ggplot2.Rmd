@@ -1,5 +1,5 @@
 ---
-title: "ggplot2"
+title: "The grammar of data visualization"
 output: html_document
 ---
 
