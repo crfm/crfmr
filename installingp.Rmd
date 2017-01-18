@@ -1,0 +1,63 @@
+---
+title: "Intalling packages"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = FALSE)
+```
+
+## Installing packages
+
+Packages (libraries) can be thought of an exention of the basic R. These are typically a set of functions or some data. Although the basic R comes with a number of standard packages they only form a tiny part of the current R-environment.
+
+Generally packages are install with the following command:
+```{r}
+install.packages("packagename")
+```
+
+E.g. if you want to install the package __readr__ one would do:
+```{r}
+install.packages("readr")
+```
+
+When you use `install.packages` function you will see a bunch of text that appears in the console window. If you have installed a package successfully a text near the bottom should state something like:
+```
+* DONE (readr)
+
+The downloaded source packages are in
+	‘/tmp/RtmpVpJbb8/downloaded_packages’
+```
+
+If something else appears, then the package most likely did not install sucessfully. The problems may be:
+
+* Your R-program is too old for the package
+* Some additional programs may be needed 
+* ...
+
+Trying to decipher what may be the problem is a challenge for the novice. 
+
+For the work ahead it is recomended that the following packages are installed:
+
+* __ggplot2__: For data visualization.
+* __dplyr__: For data manipulation.
+* __tidyr__: For data tidying.
+* __readr__: For data import.
+* __readxl__: For reading data from Excel
+* __lubridate__: Working with date and time
+* __stringr__: Working with strings
+
+This can be done by typing in the following R-code (run only one line at a time and watch closely the message that appear in the console).
+
+```{r}
+install.packages("ggplot2")
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("readr")
+install.packages("readxl")
+install.packages("lubridate")
+install.packages("stringr")
+```
+
+
