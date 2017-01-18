@@ -16,9 +16,9 @@ THIS IS SPACE IN PROGRESS - so keep calm
 
 #### [Installing packages](installingp.html)
 
-#### [Getting data into R](import.html)
+#### [Getting data into R](importing.html)
 
-#### [Grammar of plotting](ggplot.html)
+#### [Grammar of plotting - staring with ggplot2](ggplot2.html)
 
 #### [Grammar of data - starting with dplyr](dplyr.html)
 
