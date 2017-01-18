@@ -1,10 +1,23 @@
 # crfmR
 
+THIS IS SPACE IN PROGRESS - so keep calm
+
 ## On this space
 
 The intent of this space if to provide general instuctions in the use of R with specific focus on fisheries data that are generally collected in the CRFM region. It is in part of Einar Hjörleifsson ([see CRFM press release](http://www.crfm.int/index.php?option=com_k2&view=item&id=544:top-fisheries-data-expert-from-iceland-shares-expertise-with-crfm-countries&Itemid=179)) short term assignment at the CRFM St. Vincent office in the first two months of 2017.
 
 Upfront and in the spirit of open source knowledge it is emphasise that the source code for the text you are now reading can be found on this webspace as [README.Rmd](https://raw.githubusercontent.com/crfm/crfmr/master/README.Rmd). If you have [RStudio](https://www.rstudio.com) already installed on your computer and some minimal experience in using it you should be able to regenerate this whole document on your local computer using the referred file. If you can not, do not hesitate to send an email to einar.hjorleifsson@gmail.com
+
+__For the tech savy__:
+
+If you want to get the whole directory onto your computer simply do (within Linux):
+
+```
+git clone https://github.com/crfm/crfmr.git
+```
+Then open the project via RStudio and ammend, improve, add as you wish.
+
+If on Windows there are some buttons on the github page which can be pushed.
 
 ### Context
 
