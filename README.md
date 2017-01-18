@@ -8,17 +8,6 @@ The intent of this space if to provide general instuctions in the use of R with 
 
 Upfront and in the spirit of open source knowledge it is emphasise that the source code for the text you are now reading can be found on this webspace as [README.Rmd](https://raw.githubusercontent.com/crfm/crfmr/master/README.Rmd). If you have [RStudio](https://www.rstudio.com) already installed on your computer and some minimal experience in using it you should be able to regenerate this whole document on your local computer using the referred file. If you can not, do not hesitate to send an email to einar.hjorleifsson@gmail.com
 
-__For the tech savy__:
-
-If you want to get the whole directory onto your computer simply do (within Linux):
-
-```
-git clone https://github.com/crfm/crfmr.git
-```
-Then open the project via RStudio and ammend, improve, add as you wish.
-
-If on Windows there are some buttons on the github page which can be pushed.
-
 ### Context
 
 The R language is becoming the _Lingua franca_ both in data science in general as well as within the ICES community. Recent advancements within R have resulted in that R can no longer be considered as a specific statistical programming language but as a general scientific working environment. This broader environment has resulted in the R has become a natural component of reproducible data analysis and document writing.
@@ -42,4 +31,36 @@ The document is aimed at covering the fundamental/generic basis of the grammar o
     - Enhances skill and competency in R by using data familiar to the fisheries scientist in the region.
     - Increases efficiency, re-producability and transparency.
     - Provides a stepping stone for more sophisticated analysis in R in the future.
+
+### For contributers
+
+#### Get a copy of the directory
+
+If you want to get the whole directory onto your computer simply do (within Linux):
+
+A. HTTPS
+```
+git clone https://github.com/crfm/crfmr.git
+```
+
+B. If you have setup ssh on github a more seamless way is:
+```
+git clone git@github.com:crfm/crfmr.git
+```
+
+Then open the project via RStudio and ammend, improve, add as you wish.
+
+If on Windows there are some buttons on the github page which can be pushed.
+
+#### On pushing changes to the github directory
+
+Just some minimal instruction now:
+
+* In the top right panel in RStudio (if you have default settings) there is a tab called "Git". If you open it and if you have made some changes you may see a list of some objects.
+* Select the objects you want to commit and press the "Commit" button.
+* Write some gibberish (for now) in the "Commit message"
+* Once done presh the "Push" button. You may here be asked for a password if you have cloned the stuff via HTTPS.
+* If all goes smoothly you have changed the content on the github.com site
+
+
 
