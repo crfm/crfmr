@@ -5,6 +5,8 @@ output:
     keep_md: yes
 ---
 
+THIS IS SPACE IN PROGRESS - so keep calm
+
 ## On this space
 
 The intent of this space if to provide general instuctions in the use of R with specific focus on fisheries data that are generally collected in the CRFM region. It is in part of Einar Hjörleifsson ([see CRFM press release](http://www.crfm.int/index.php?option=com_k2&view=item&id=544:top-fisheries-data-expert-from-iceland-shares-expertise-with-crfm-countries&Itemid=179)) short term assignment at the CRFM St. Vincent office in the first two months of 2017.
