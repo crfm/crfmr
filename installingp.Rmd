@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ## Installing packages
 
-Packages (libraries) can be thought of an exention of the basic R. These are typically a set of functions or some data. Although the basic R comes with a number of standard packages they only form a tiny part of the current R-environment.
+Packages (libraries) can be thought of an extensions of the basic R. These are typically a set of functions or some data. Although the basic R comes with a number of standard packages they only form a tiny part of the current R-environment.
 
-Generally packages are install with the following command:
+Generally packages are installed with the following command:
 ```{r}
 install.packages("packagename")
 ```
@@ -30,7 +30,7 @@ The downloaded source packages are in
 	‘/tmp/RtmpVpJbb8/downloaded_packages’
 ```
 
-If something else appears, then the package most likely did not install sucessfully. The problems may be:
+If something else appears, then the package most likely did not install successfully. The problems may be:
 
 * Your R-program is too old for the package
 * Some additional programs may be needed 
@@ -45,26 +45,36 @@ installed.packages()
 
 In RStudio one can obtain the same information by opening the "Packages" tab in the lower right window panel.
 
-For the work ahead it is recomended that the following packages are installed:
+For the work ahead it is recommended that the following __tidyverse__ packages are installed:
 
-* __ggplot2__: For data visualization.
-* __dplyr__: For data manipulation.
-* __tidyr__: For data tidying.
-* __readr__: For data import.
+* __ggplot2__: For data visualization
+* __tibble__: Data frame wrapper
+* __tidyr__: For data tidying
+* __readr__: For data import
+* __dplyr__: For data manipulation
+
+This can be done by typing in the following R-code:
+```{r}
+install.packages("tidyverse")
+```
+
+If you don't get something like:
+```
+* DONE (tidyverse)
+```
+in one of the bottom lines in the console, then not all packages may have installed. So try as an alternative:
+```{r}
+install.packages("ggplot2")
+install.packages("tibble")
+install.packages("tidyr")
+install.packages("readr")
+install.packages("dplyr")
+```
+
+Besides the above packages you are advised to install also the following packages:
+
 * __readxl__: For reading data from Excel
 * __lubridate__: Working with date and time
 * __stringr__: Working with strings
 
-This can be done by typing in the following R-code (run only one line at a time and watch closely the message that appear in the console).
-
-```{r}
-install.packages("ggplot2")
-install.packages("dplyr")
-install.packages("tidyr")
-install.packages("readr")
-install.packages("readxl")
-install.packages("lubridate")
-install.packages("stringr")
-```
-
-
+Installation of other packages may be called for later in this space.

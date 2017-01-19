@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE,
 library(tidyverse)
 ```
 
-R is not a database software So one normally has to import the data from some other souces.
+R is not a database software so one normally has to import the data from some other sources.
 
 ### Entering data directly into R
 
@@ -35,7 +35,7 @@ d <- data_frame(weight = numeric(0),
 d <- edit(d)
 ```
 
-Here the `edit`-function opens up a very primitive data-entry window with the data then being stored in the obect __d__. But as said R is not a good data entry medium so this is rarely used for anything else than _ad hoc_ entries of data.
+Here the `edit`-function opens up a very primitive data-entry window with the data then being stored in the object __d__. But as said R is not a good data entry medium so this is rarely used for anything else than _ad hoc_ entries of data.
 
 ### Importing data from text files
 
@@ -156,23 +156,35 @@ copy_to() ## saves a dataframe to a database
 
 ### Other software connections
 
-Package haven provides support for SPSS, STATA and SAS files
+Package `haven` provides functions for reading in SPSS, STATA and SAS files:
+
+```{r, eval = FALSE}
+library(haven)
 read_sas("path/to/file") ## SAS files
 read_por("path/to/file") ## SPSS portable files
 read_sav("path/to/file") ## SPSS data files
 read_dta("path/to/file") ## Stata files
-Similarly R.matlab can read Matlab files
+```
+
+Similarly in the `R.matlab` package there is a function that reads in matlab type of data:
+```{r, eval = FALSE}
+library(R.matlab)
 readMat('path/to/file') ## Matlab data files
+```
+
+### Specific data sources
 
 The ’rfishbase’ package allows access to FishBase directly from R:
+```{r, eval = FALSE}
 library(rfishbase)
-## query data on length weight relationship
-lw <- length_weight('Gadus morhua')
-## query growth parameters
-vonB <- popgrowth('Gadus morhua')
-## find common names (in many languages)
-cod.names <- common_names('Gadus morhua')
-## diet data
-cod.diet <- diet('Gadus morhua')
-## fecundity
-cod.fec <- fecundity('Gadus morhua')
+# query data on length weight relationship
+length_weight("Gadus morhua")
+# query growth parameters
+popgrowth("Parexocoetus brachypterus")
+# find common names (in many languages)
+common_names("Parexocoetus brachypterus")
+# diet data
+diet("Parexocoetus brachypterus")
+# fecundity
+fecundity("Parexocoetus brachypterus")
+```

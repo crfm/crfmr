@@ -84,7 +84,7 @@ Lets what we have got:
 table(d$gear)
 ```
 
-Now we can do similar things with the boat varibles:
+Now we can do similar things with the boat variables:
 ```{r}
 table(d$boat)
 ```
@@ -103,13 +103,18 @@ d <-
 
 
 ```{r}
-d <- 
-  d %>% 
-  mutate(species = str_trim(species))
 table(d$species)
 ```
 
-Bit of a nightmare to clean these :-)
+Bit of a nightmare to clean these :-) One way to do this is to generate a table with the unique species names, export it, add a column in some simple data editor (Excel will to nicely for this).
+
+```{r}
+species <-
+  d %>% 
+  mutate(species = str_trim(species))
+```
+
+
 
 But lets start to look at the numerical variables
 ```{r, warning = FALSE}
