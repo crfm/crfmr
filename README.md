@@ -10,7 +10,7 @@ Upfront and in the spirit reproducability and open source knowledge the source c
 
 ### Context
 
-The R language is becoming the _Lingua franca_ both in data science in general as well as within the ICES community. Recent advancements within R have resulted in that R can no longer be considered as a specific statistical programming language but as a general scientific working environment. This broader environment has resulted in the R has become a natural component of reproducible data analysis and document writing.
+The R language is becoming the _Lingua franca_ both in data science in general, including the fisheries science community. Recent advancements within R have resulted in that R can no longer be considered as a specific statistical programming language but as a general scientific working environment. This broader environment has resulted in the R has become a natural component of reproducible data analysis and document writing.
 
 The R language has been endorsed by the fisheries scientist in CRFM fisheries reports as being an avenue worth pursuing. Two short courses have also been held under the CRFM umbrella during the scientific meetings.
 
