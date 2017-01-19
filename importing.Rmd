@@ -4,7 +4,175 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE)
 ```
 
-... to be written
+```{r, echo = FALSE}
+library(tidyverse)
+```
+
+R is not a database software So one normally has to import the data from some other souces.
+
+### Entering data directly into R
+
+Although R is not a good data entry medium it is possible. E.g. to one can create vectors by:
+
+```{r}
+weight <- c(1,5,3,2,6)
+length <- c(10,17,14,12,18)
+```
+Or one could generate a dataframe by:
+```{r}
+d <- data_frame(weight = c(1, 5, 3, 2, 6),
+                length = c(10, 17, 14, 12, 18))
+```
+
+Or one could use the simple R Data Editor:
+```{r, eval = FALSE}
+d <- data_frame(weight = numeric(0),
+                length = numeric(0))
+d <- edit(d)
+```
+
+Here the `edit`-function opens up a very primitive data-entry window with the data then being stored in the obect __d__. But as said R is not a good data entry medium so this is rarely used for anything else than _ad hoc_ entries of data.
+
+### Importing data from text files
+
+A lot of functions in R deal with reading in text files in various formats. The base function is `read.table`:
+```{r, eval = FALSE}
+d <-
+  read.table(file = "nameOfFile",      # path to the file
+             header = TRUE,            # are there column names
+                                       # at the top
+             dec = ".",                # decimal sign
+             sep = " ",                # column separator symbol
+             skip = 0,                 # num lines at top to skip
+             stringsAsFactors = FALSE, # treat text as character
+             comment.char = "#")       # indicating comments
+```
+
+Some examples of the derivatives of `read.table` are:
+```
+read.csv        # US style CSV file (column separator is ',' and dec '.'
+read.csv2       # European style CSV file (column separator is ';' and dec ','
+read.delim      # Tab deliminated data, US style decimal (.)
+read.delim      # Tab deliminated data, EU style decimal (,)
+read.fwf        # Fixed width input (common format in the old days)
+read.fortran    # Fotran formated text
+readLines       # Raw lines from the file
+scan            # Reads in a vector from the input
+```
+
+__NOTE: Below is a generic issue, not limited to read.table__
+The first argument in the `read.table` function and its derivative is the file name, including the path. If the file (lets say it is called minke.csv) is in the current working directory (use `getwd()` to get information of you current working directory) one can simply write the following command:
+```{r, eval = FALSE}
+minke <- read.csv("minke.csv")
+```
+If the data file are in folder called __data__ within the working directory:
+```{r, eval = FALSE}
+minke <- read.csv('data/minke.csv')
+```
+If it is somewhere on the computer one can use absolute positioning. E.g if it resides in a root folder called __all_data__ one would use the following
+```{r, eval = FALSE}
+minke <- read.csv("~/all_data/minke.csv")    # linux/mac
+minke <- read.csv("C:/all_data/minke.csv")   # windows
+```
+
+If the folder name contains spaces (e.g. folder name is __all data__ one would need to resort to:
+```{r, eval = FALSE}
+minke <- read.csv("C:/all\t data/minke.csv")    
+```
+One can also read online data directly into R, e.g.:
+```{r, eval = FALSE}
+minke <- read.csv("http://www.hafro.is/~bthe/data/minke.csv")
+```
+
+### Importing data from excel sheets
+
+The `readxl`-package provides support to read in Excel files directly into R
+```{r, eval = FALSE}
+# read_excel reads both xls and xlsx files
+read_excel("minke.xls")
+read_excel("minke.xlsx")
+# Specify sheet with a number or name
+read_excel("minke.xls", sheet = "data")
+read_excel("minke.xls", sheet = 2)
+## list excel sheets
+excel_sheets('minke.xls')
+# If NAs are represented by something other than blank cells,
+# set the na argument
+read_excel("minke.xls", na = "NA")
+```
+
+### Sanity checks
+
+After the data has been imported one frequently checks the data to see what was exported is as expected. Some common functions are: 
+```
+head(d)     # shows the top 6 lines of dat
+tail(d)     # shows the last 6 lines of dat
+dim(d)      # shows the num row and col of dat
+names(d)    # gives the column names of dat
+summary(d)  # quick summary statistics for the columns of d
+str(d)      # show the structure of the data, e.g. variable types
+glimpse(d)  # dplyr equivalent of str that works on data frames
+```
+
+### Importing data from databases
+
+Databases are commonly used to store (large amounts of) data and numerous software vendors provide database solutions, both general and specific. Similarly numerous packages exist to interact with databases in R. Notably `DBI`, `RODBC` and `dplyr`. Typically in an R session the user queries the database for the data needed for a particular analysis and loads it into memory. Larger datasets, that don't fit into memory may however need to be processed prior to importing it into R.
+
+#### Connecting to an Access database
+
+`RODBC` packages provides functions to connect to an Access database
+```{r, eval = FALSE}
+library(RODBC)      # Load RODBC package
+# Connect to Access db
+db <-
+  odbcConnectAccess("C:/Documents/NameOfMyAccessDatabase")
+# Get data
+d <- sqlQuery(db , "select *
+ from Name_of_table_in_my_database")
+close(db)           # close connection
+```
+
+#### General database connectivity
+
+The `dplyr` package has built in connectivity for a wide range of data base types:
+
+* postgres
+* mysql
+* sqlite
+* oracle (via dplyrOracle)
+
+src_sqlite() ## sets up a connection
+## with an sqlite database
+src_postgres() ## sets up a connection with
+## an postgres database
+tbl() ## calls a table from a database
+sql() ## prepares a sql query
+copy_to() ## saves a dataframe to a database
+## as a table
+
+### Other software connections
+
+Package haven provides support for SPSS, STATA and SAS files
+read_sas("path/to/file") ## SAS files
+read_por("path/to/file") ## SPSS portable files
+read_sav("path/to/file") ## SPSS data files
+read_dta("path/to/file") ## Stata files
+Similarly R.matlab can read Matlab files
+readMat('path/to/file') ## Matlab data files
+
+The ’rfishbase’ package allows access to FishBase directly from R:
+library(rfishbase)
+## query data on length weight relationship
+lw <- length_weight('Gadus morhua')
+## query growth parameters
+vonB <- popgrowth('Gadus morhua')
+## find common names (in many languages)
+cod.names <- common_names('Gadus morhua')
+## diet data
+cod.diet <- diet('Gadus morhua')
+## fecundity
+cod.fec <- fecundity('Gadus morhua')

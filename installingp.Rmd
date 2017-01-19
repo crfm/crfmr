@@ -36,7 +36,14 @@ If something else appears, then the package most likely did not install sucessfu
 * Some additional programs may be needed 
 * ...
 
-Trying to decipher what may be the problem is a challenge for the novice. 
+Trying to decipher the error output that gets printed in the console may be a challenge for the novice.
+
+One normally installs packages only once or when one wants to get the latest update. To see what packages are installed one can use the following function:
+```{r, eval = FALSE}
+installed.packages()
+```
+
+In RStudio one can obtain the same information by opening the "Packages" tab in the lower right window panel.
 
 For the work ahead it is recomended that the following packages are installed:
 

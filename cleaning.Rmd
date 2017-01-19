@@ -1,0 +1,119 @@
+---
+title: "Cleaning data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE)
+```
+
+NOTE: Currently use data from the 2014 R course. Need to get permission before pushing to the public sphere. If permission not granted need to use another dataset.
+
+We are going to import an Excel file called __all_length_data.xls__. In the example case it resides in a directory called __data-raw__ under the current R working space.
+
+Needed packages:
+```{r}
+library(tidyverse)      # or load just dplyr
+library(stringr)        # for string manipulations
+library(readxl)         # has functions to read data from Excel
+```
+
+__First go__:
+
+We are going to work with a dataset that contains 2309 observations and 7 variables
+```{r, warning = FALSE}
+d_raw <- read_excel("data-raw/all_length_data.xls")
+```
+
+Notice that in the console the following text was returned:
+```
+There were 50 or more warnings (use warnings() to see the first 50)
+```
+Lets not worry about that for now, we will return to that later. To get a view of the data read in do:
+```{r}
+glimpse(d_raw)
+```
+So we have `r ncol(d_raw)` variables as expected. The first 4 variables are of type character and the last three are numeric values. However the number of observations are `r nrow(d_raw)` which is more than the 2309 variables as stated above.
+
+The `glimpse` function used above shows the topmost records. We can use the `tail` function to get a view of the last records (6 records by default):
+```{r}
+tail(d_raw)
+```
+We see that all these observations are empty (marked as __NA__). A very convenient function to get rid of empty record (rows) is the `xxxx`-function (NOTE: need to find that function):
+```{r}
+# use this for now
+d <- d_raw[rowSums(is.na(d_raw)) != ncol(d_raw),]
+glimpse(d)
+```
+So now we have the number of observations we expected.
+
+The names of the variables is not very convenient for further processing (contain space, mix of lower and upper cap, ...). Lets rename them:
+```{r}
+d <-
+  d %>% 
+  rename(date = DATE,
+         boat = Boat,
+         gear = Technique,
+         species = Species,
+         flength = `Fork Length  (cm)`,
+         tlength = `Total Length (cm)`,
+         slength = `Standard Length (cm)`)
+names(d)
+```
+
+Now lets look at the non-numeric variable and see if they are as expected. One way to do this is as follows:
+```{r}
+table(d$gear)
+```
+
+First we notice that R is case sensitive (__lobster trap__ in not the same as __Lobster Trap__). We also observe other type of (likely) typos. We expect for example that __Traps__ and __trap__ refer to the same gear group. We also see that Trolling aligns not to the right, which means that is has a trailing space. Lets try to clean those and other likely typing errors:
+```{r}
+d <- 
+  d %>% 
+  mutate(gear = str_trim(gear),                        # Get rid of leading and trailing spaces
+         gear = ifelse(gear == "NA", NA, gear),        # NA is hear actually NA
+                                                       #  NOTE: check if this can not be fixed upstream (e.g. read_excel)
+         gear = Hmisc::capitalize(tolower(gear)),      # Just the first word with capital
+         gear = ifelse(gear == "Trap", "Traps", gear),
+         gear = ifelse(gear == "Lobster hook", "Lobster trap", gear))
+```
+
+Lets what we have got:
+```{r}
+table(d$gear)
+```
+
+Now we can do similar things with the boat varibles:
+```{r}
+table(d$boat)
+```
+
+We notice that we seem to have numerical values as text. This needs to be dug into further. But where we have actual names we observe some likely typos (not listed here, just read the code below):
+```{r}
+d <- 
+  d %>% 
+  mutate(boat = str_trim(boat),    # get rid of leading or trailing spaces
+         boat = ifelse(boat == "Caiban", "Caliban", boat),
+         boat = ifelse(boat == "Harold's", "Harold", boat),
+         boat = ifelse(boat == "poacher", "Poacher", boat),
+         boat = ifelse(boat == "Ronald", "Ronald Dean", boat),
+         boat = ifelse(boat == "samuel", "Samuel", boat))
+```
+
+
+```{r}
+d <- 
+  d %>% 
+  mutate(species = str_trim(species))
+table(d$species)
+```
+
+Bit of a nightmare to clean these :-)
+
+But lets start to look at the numerical variables
+```{r, warning = FALSE}
+ggplot(d, aes(tlength, slength)) +
+  geom_point() +
+  geom_abline()
+```
