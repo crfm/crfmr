@@ -1,0 +1,344 @@
+---
+title: "More on grammar of data and graphs"
+subtitle: "Datamining Sea Around Us Database"
+output: html_document
+---
+
+## Preamble
+___
+
+Here we want to enhance our skills in the use of grammar of data and graphs. It is expected that readers are already familiar with the basics of [plotting](ggplot2.html) and [data manipulation](dplyr.html).
+
+To that end we will:
+
+* Use the regional data from the Sea Around Us database
+* We will take a step-by-step approach
+* And end up with ...
+
+The small print: The following can be considered as an ignorant novice outsider's attempt to extract some information patterns and trends of the CRFM countries on catch and landings value by year and species. The main purpose though to demonstrate how one can use the `tidyverse`-tools to mine data to find some information on pattern and trends.
+
+Exclaimer: Given that we only have bulk catch data (__C__) the inference that one can make about the pressure (Fishing mortality or __F__) and State (Biomass or __B__) is limited. Recall the fundmental catch equation:
+
+$Catch = FB$
+
+As Russel said, mathematical expressions, even though simple are a tool to clarify thinking. The above equation clearly illustrates that in order to solve the riddle at least two of the parmeters need to be known or estimated.
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      #warning = FALSE,
+                      message = FALSE, 
+                      fig.width = 7.5,
+                      fig.height = 4.5,
+                      #fig.show = "hold",
+                      collapse = TRUE,
+                      comment = "#>")
+options(dplyr.print_min = 4L, dplyr.print_max = 4L)
+```
+
+## The source data
+
+The data were obtained from http://www.seaaroundus.org/ using the following point, mouse click and type steps (apologies can not make this reproducable):
+
+* Tools & data > Advanced search
+* Filled in the following
+    - Search by: FAO area(s)
+    - FAO areas: Atlantic, Western central (31)
+* Pressed: Download data
+* Unzipped the document ("SAU FAO 31 v44-1.zip") inside a folder in the current working directory called "data-raw".
+* Renamed: "SAU FAO 31 v44-1.csv" as SAU_FAU_31_v44-1.csv"
+
+Some elementary description of the fields can be found [here](http://www.seaaroundus.org/tools-guide/).
+
+
+## The code
+
+### Needed libraries
+
+```{r, message = FALSE}
+library(tidyverse)
+```
+
+### Recall the dplyr verbs (functions):
+
+* __filter__: keep rows matching criteria
+* __select__: pick columns by name
+* __arrange__: order the rows according to a variable
+* __mutate__: add new variables
+* __summarise__: reduce variables to values
+* __group_by__: Group data into rows
+* __left_join__: return all rows from x, and all columns from x and y
+* __right_join__: return all rows from y, and all columns from x and y
+
+## Read in the data
+
+```{r}
+# Read in the data:
+sau_fao_31 <- 
+  read_csv("data-raw/seaaroundus/SAU_FAO_31_v44-1.csv")
+glimpse(sau_fao_31)
+
+# only crfm countries
+crfm_cntr <- 
+  c("Anguilla (UK)", "Antigua & Barbuda", "Bahamas", "Barbados",
+    "Belize", "Dominica", "Grenada", "Guyana", "Haiti",
+    "Jamaica", "Montserrat (UK)", "Saint Kitts & Nevis", "Saint Lucia",
+    "Saint Vincent & the Grenadines", "Suriname", "Trinidad and Tobago",
+    "Turks and Caicos")
+
+d <- 
+  sau_fao_31 %>% 
+  # only crfm countries
+  filter(fishing_entity %in% crfm_cntr) %>% 
+  # To reduce typing futher down the line lets rename some columns
+  rename(latin = scientific_name,
+         species = common_name,
+         bgroup = functional_group,
+         cgroup = commercial_group,
+         country = fishing_entity,
+         sector = fishing_sector,
+         type = catch_type,
+         status = reporting_status,
+         catch = tonnes,
+         value = landed_value)
+```
+
+Lets get a sense of the richness of the data by standardizing the catch trends by country and species:
+
+```{r}
+p <-
+  d %>% 
+  group_by(year, country, species) %>%
+  summarise(catch = sum(catch)) %>% 
+  group_by(country, species) %>% 
+  mutate(catch = catch/mean(catch),
+         grouping = paste(country, species)) %>% 
+  ggplot(aes(year, catch)) +
+  # plot a horizontal line that respresent the mean
+  geom_hline(yintercept = 1, colour = "red") +
+  geom_line(aes(group = grouping), alpha = 0.1) +
+  scale_x_continuous(breaks = seq(1955, 2010, by = 5))
+p
+```
+
+This is not very informative. The most likely reasons is that rare species in the catches create the largest deviations. But it illustrates nicely that fisheries science often have to work across logarithmic scales. But also bring forwards that from a Egosystem perspective we also need to think about the little guys: Low catch [low biomass, slow growth rate, late maturity, ...??] and hence potentially suspectible to overfishing.
+
+Since I created an object called __p__, can proceed by limiting the display of the extremes. I will also add a smoother that represents the overall catch trend (ggplot2 uses by default a gam-smoother). 
+
+```{r}
+p +
+  coord_cartesian(ylim = c(0, 2)) +
+  geom_smooth()
+```
+
+Still a bit of a mess. But what we observe is:
+
+* Although individual wiggles (each represents a country-specise group) can be seen (individual, thin, transparent lines) there seem to be some trends in the data that are common (the thick, black and nontranparent lines). This may imply that there are are some country-species groups that all have trends in common (assumption driven SAO data, like asssuming that catch trends of a particular species is the same across all countries?). Or probably more likely that I have misunderstood the structure of the database. Whatever the case, this may drive the gam-mean (because of the number of observations). Given that caveat one may conclude, for now:
+
+* On average there has been an increase in catches by species and countries
+    - Because the data is normilzed by species-countries this is irrespective of scale of the catches by species and countries.
+  - An overall increase from below the mean to a contemporaneous high is observed from 1950 to 1985.
+  - A temporary decrease to a little below the long term mean is observed from 1985 to around 1993 followed by an increase to 1.2 above the mean at the start of this century.
+  - Stable catches in recent years.
+
+Somebody may want to classify this type of an analysis as a holistic approach. Other may want to classify it as "eGosystem based analysis". Others may want to think about using the gam-smoother data as a variable to correlate to some environmental signal - and then frame it as "Climatic change analysis". But before going there one may need to look at the commonalities (the dense black lines, that are suspected to be based on extrapolation assumptions by the SAU).
+
+Whatever the latest funding buzzword the contempary mortal fisheries scientist may conclude that the region fisheries has moved from a developmental phase to fully exploited phase. But before we reach a premature conclusion let dig into what may be an assumption driven trend (the thick dense lines).
+
+
+
+
+Lets try to repeat this analysis but move from the basic country-species to the country-biological groups.
+
+```{r}
+d %>% 
+  group_by(year, country, bgroup) %>%
+  summarise(catch = sum(catch)) %>% 
+  group_by(country, bgroup) %>% 
+  mutate(catch = catch/mean(catch),
+         grouping = paste(country, bgroup)) %>% 
+  ggplot(aes(year, catch, group = grouping)) +
+  geom_line(alpha = 0.1) +
+  #scale_y_log10() +
+  geom_hline(yintercept = 1)
+```
+
+Still no remedies. Lets try to country-commercial groups.
+
+```{r}
+d %>% 
+  group_by(year, country, cgroup) %>%
+  summarise(catch = sum(catch)) %>% 
+  group_by(country, cgroup) %>% 
+  mutate(catch = catch/mean(catch),
+         grouping = paste(country, cgroup)) %>% 
+  ggplot(aes(year, catch, group = grouping)) +
+  geom_line(alpha = 0.1) +
+  #scale_y_log10() +
+  geom_hline(yintercept = 1)
+```
+
+
+
+
+
+<div class="panel panel-warning">
+<div class="panel-heading">Exercise</div>
+<div class="panel-body">
+
+
+Familiarise yourself with / get an overview of the data. E.g. what is the year range the survey covers, how many stations per year, how many species are in the database, etc.
+
+</div>
+</div>
+
+
+
+
+```{r}
+d %>% 
+  group_by(year, status) %>% 
+  summarise(catch = sum(catch)/1e3) %>% 
+  # Because we are creating a stacked line plot we do the dummy labeling twist
+  #mutate(status = ifelse(status == "Reported", "Total", status)) %>% 
+  ggplot(aes(year, catch, colour = status)) +
+  theme_bw() +
+  geom_line(lwd = 1) +
+  scale_x_continuous(breaks = seq(1950, 2010, by = 10)) +
+  expand_limits(y = 0) +
+  labs(x = NULL, y = NULL,
+       title = "Estimates of total catch (kt) in the CRFM countries",
+       subtitle = "Source: Sea Around Us")
+d %>% 
+  group_by(year, cgroup) %>% 
+  summarise(catch = sum(catch)/1e3) %>% 
+  ggplot(aes(year, catch, colour = cgroup)) +
+  theme_bw() +
+  geom_line(lwd = 1) +
+  scale_colour_brewer(palette = "Set3")
+```
+
+```{r}
+d2 <-
+  d %>% 
+  group_by(year, country) %>% 
+  summarise(catch = sum(catch),
+            value = sum(value)) 
+
+# top 10 last decaude
+
+d3 <- 
+  d2 %>% 
+  filter(year %in% 2004:2013) %>% 
+  group_by(country) %>% 
+  summarise(min = min(catch),
+            mean = mean(catch),
+            max = max(catch)) %>% 
+  arrange(desc(mean))
+
+d3 %>% 
+  ggplot(aes(reorder(country, mean), mean)) +
+  geom_point() +
+  geom_linerange(aes(min = min, max = max)) +
+  coord_flip()
+            
+# general catch trend last 20 years
+
+d2 %>% 
+  filter(year %in% 1994:2013) %>% 
+  group_by(country) %>% 
+  mutate(catch = catch/mean(catch)) %>% 
+  ggplot(aes(year, catch)) +
+  geom_line() +
+  facet_wrap(~ country)
+
+d2 %>% 
+  filter(year %in% 1994:2013) %>% 
+  group_by(country) %>% 
+  mutate(catch = catch/mean(catch)) %>% 
+  summarise(sd = sd(catch)) %>% 
+  arrange(-sd) %>% 
+  ggplot(aes(reorder(country, sd), sd)) +
+  geom_point() +
+  coord_flip() +
+  expand_limits(y = 0)
+```
+
+# Garbage below
+
+
+#### Seaaroundus
+
+The [Sea Around Us](http://www.seaaroundus.org) has large fisheries and fisheries-related data. These data can be downloaded as zip files via point-and-mouse click approach. Alternative at least some of the data (annual catch and value by species) can be imported directly into R via the `rseaaroundus`-package (A wrapper for the Sea Around Us API). To install the package do:
+
+```{r, eval = FALSE}
+devtools::install_github("SeaAroundUs/rseaaroundus")
+```
+
+```{r, eval = FALSE}
+library(seaaroundus)
+# The CRFM countries
+cntr <- 
+  c("Anguilla (UK)", "Antigua & Barbuda", "Bahamas", "Barbados",
+    "Belize", "Dominica", "Grenada", "Guyana", "Haiti",
+    "Jamaica", "Montserrat (UK)", "Saint Kitts & Nevis", "Saint Lucia",
+    "Saint Vincent & the Grenadines")
+# The country codes
+crfm <- 
+  listregions('eez') %>% 
+  mutate(id = row.names(.)) %>% 
+  filter(title %in% cntr)
+crfm
+```
+
+If we are interested in the top catch data from Dominca (id = 212) we can do the following:
+```{r, eval = FALSE}
+dom <- 
+  catchdata("eez", id = 212, limit = 10) %>% 
+  mutate(year = as.integer(row.names(.))) %>% 
+  tbl_df()
+glimpse(dom)
+```
+
+```{r, eval = FALSE}
+# use alternative API environment (available on all functions)
+# NOTE: alternative API environments may not always be publically accessible or stable
+x <- catchdata("eez", id = 2012, env="qa")
+
+# get top 3 species data for Brazil as a data frame
+catchdata("eez", 76, limit=3) %>% glimpse()
+
+# get reporting status data by value for Brazil as a data frame
+catchdata("eez", 76, measure="value", dimension="reporting-status")
+
+# get species data for Brazil as a chart
+catchdata("eez", 76, chart=TRUE)
+
+# get map of all eez regions
+# NOTE: users on Windows have had some issues drawing region maps
+regionmap("eez")
+
+# get region map of brazil
+regionmap("eez", 212)
+
+# eez vs high seas percent catch data frame
+# NOTE: data not available until SeaAroundUs global paper is released
+eezsvshighseas()
+
+# eez vs high seas percent catch graph
+eezsvshighseas(chart=TRUE)
+
+# marine trophic index for Brazil as a data frame
+marinetrophicindex("eez", 212)
+
+# marine trophic index for Brazil as graph
+marinetrophicindex("eez", 76, chart=TRUE)
+
+# get cells for a shape in WKT format
+getcells("POLYGON ((-48.177685950413291 15.842380165289299,-48.177685950413291 15.842380165289299,
+-54.964876033057919 28.964280991735578,-35.960743801652967 27.606842975206646,-48.177685950413291 
+15.842380165289299))")
+
+# get datagrid of cell data for a given year and list of cells
+getcelldata(2005, c(89568,90288,89569))
+```
+

@@ -67,13 +67,22 @@ scan            # Reads in a vector from the input
 __NOTE: Below is a generic issue, not limited to read.table__
 The first argument in the `read.table` function and its derivative is the file name, including the path. If the file (lets say it is called minke.csv) is in the current working directory (use `getwd()` to get information of you current working directory) one can simply write the following command:
 ```{r, eval = FALSE}
-minke <- read.csv("minke.csv")
+minke <- read.table("minke.csv",
+                    header = TRUE,
+                    sep = ",")
 ```
+
+Or, because we know the file is a csv-file we simply do:
+```{r, eval = FALSE}
+minke <- read.csv("data-raw")
+```
+
 If the data file are in folder called __data__ within the working directory:
 ```{r, eval = FALSE}
 minke <- read.csv('data/minke.csv')
 ```
-If it is somewhere on the computer one can use absolute positioning. E.g if it resides in a root folder called __all_data__ one would use the following
+
+If it is somewhere on the computer one can use absolute positioning. E.g if it resides in a root folder called __all_data__ one would use the following:
 ```{r, eval = FALSE}
 minke <- read.csv("~/all_data/minke.csv")    # linux/mac
 minke <- read.csv("C:/all_data/minke.csv")   # windows
@@ -83,36 +92,41 @@ If the folder name contains spaces (e.g. folder name is __all data__ one would n
 ```{r, eval = FALSE}
 minke <- read.csv("C:/all\t data/minke.csv")    
 ```
+
 One can also read online data directly into R, e.g.:
-```{r, eval = FALSE}
-minke <- read.csv("http://www.hafro.is/~bthe/data/minke.csv")
+```{r}
+minke <- read.csv("http://www.hafro.is/~einarhj/data/minke.csv")
+glimpse(minke)
 ```
 
 ### Importing data from excel sheets
 
 The `readxl`-package provides support to read in Excel files directly into R
+```{r, message = FALSE}
+# read_excel reads (both xls and xlsx files)
+library(readxl)
+d <- read_excel("data-raw/sau-crfm-country-catches.xlsx")
+glimpse(d)
+```
+
+The `read_excel` function will by default read in the 1st data-sheet (checkout `args(read_excel)`. To get information on what sheets are in an excel file one can use the `excel_sheets` function:
+```{r}
+excel_sheets("data-raw/sau-crfm-country-catches.xlsx")
+```
+
+If NAs are represented by something other than blank cells, set the na argument by e.g.:
 ```{r, eval = FALSE}
-# read_excel reads both xls and xlsx files
-read_excel("minke.xls")
-read_excel("minke.xlsx")
-# Specify sheet with a number or name
-read_excel("minke.xls", sheet = "data")
-read_excel("minke.xls", sheet = 2)
-## list excel sheets
-excel_sheets('minke.xls')
-# If NAs are represented by something other than blank cells,
-# set the na argument
-read_excel("minke.xls", na = "NA")
+read_excel("data-raw/sau-crfm-country-catches.xlsx", na = "NA")
 ```
 
 ### Sanity checks
 
 After the data has been imported one frequently checks the data to see what was exported is as expected. Some common functions are: 
 ```
-head(d)     # shows the top 6 lines of dat
-tail(d)     # shows the last 6 lines of dat
-dim(d)      # shows the num row and col of dat
-names(d)    # gives the column names of dat
+head(d)     # shows the top 6 lines of d
+tail(d)     # shows the last 6 lines of d
+dim(d)      # shows the num row and col of d
+names(d)    # gives the column names of d
 summary(d)  # quick summary statistics for the columns of d
 str(d)      # show the structure of the data, e.g. variable types
 glimpse(d)  # dplyr equivalent of str that works on data frames
@@ -145,14 +159,44 @@ The `dplyr` package has built in connectivity for a wide range of data base type
 * sqlite
 * oracle (via dplyrOracle)
 
-src_sqlite() ## sets up a connection
-## with an sqlite database
+```
+src_sqlite()   ## sets up a connection
+               ## with an sqlite database
 src_postgres() ## sets up a connection with
-## an postgres database
+               ## an postgres database
 tbl() ## calls a table from a database
 sql() ## prepares a sql query
 copy_to() ## saves a dataframe to a database
 ## as a table
+```
+
+#### Example: Connection to an online postgres database
+
+... need some words here
+
+```{r, eval = FALSE}
+library(RPostgreSQL)
+# connect to the database
+ram <- src_postgres(dbname = "srdb", 
+                    host =  "nautilus-vm.mathstat.dal.ca", 
+                    user = "srdbuser", 
+                    password = "srd6us3r!",
+                    port = 5432,
+                    options = "-c search_path=srdb")
+
+ram                                            # list of the tables in the database
+
+tbl(ram, "assessment") %>%                     # Access the table 
+  filter(stockid == "CODICE") %>%              # I only want to look at my cod
+  select(assessid) %>%                         # I only wanted to get the assessid from this table
+                                               #   to be used in the left_join below
+  left_join(tbl(ram, "timeseries")) %>%        # Get data from the timeries (only 'CODICE'
+  collect() %>%                                # Get the data to my computer
+  ggplot() +                                   # And to the plot :-)
+  geom_line(aes(tsyear, tsvalue)) +
+  facet_wrap(~ tsid, scale = "free_y")
+```
+
 
 ### Other software connections
 
@@ -172,7 +216,9 @@ library(R.matlab)
 readMat('path/to/file') ## Matlab data files
 ```
 
-### Specific data sources
+### Online data sources
+
+#### Fishbase
 
 The ’rfishbase’ package allows access to FishBase directly from R:
 ```{r, eval = FALSE}

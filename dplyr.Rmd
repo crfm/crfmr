@@ -45,6 +45,7 @@ ellidaar <-
 ```
 
 ### Quick overview of the data
+
 ```{r}
 str(ellidaar)
 ```
