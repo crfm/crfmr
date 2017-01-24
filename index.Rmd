@@ -1,5 +1,5 @@
 ---
-title: "Need to find a nice title"
+title: "crfmR"
 output: html_document
 ---
 
@@ -7,20 +7,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This space is in process, so keep calm.
+This space is in progress, so keep calm.
 
-## Content
-
-The content of this space is split into two main section: A generic introduction into R with emphasis on data munging, summarisation and presentation followed by a section of case examples.
-
-### The basis
+## Preamble
 ___
 
-There are plenty of good books available on R. What follows in only some basic instructions to get people started. In order to lower the learning hurdle the examples used are data that are familiar/common to fisheries scientists in the CRFM region. 
+The content of this space is split into two main section: A short introduction into R with emphasis on data munging, summarisation and presentation followed by a section of (hopefully) regional case examples.
 
-#### [Installing R and RStudio](installingr.html)
+It is anticipated that the scripts provided will aid those that would like to get started in using R as well as for those that would like to get more experience in using R. The CRFM fisheries scientists community (current focus is the Data and Methods Working Group) is encoured to run the scripts themselves at their own pace. When issues arise, you can send me an email (einar.hjorleifson at gmail.com) or what would be preferrable send an email to the data and methods dgroup.
 
-#### [Installing packages](installingp.html)
+The background/motivation for the work can currently be found [here](README.html). 
+
+## The basis
+___
+
+There are plenty of good books available on R. What follows in only some basic instructions to get people started.
+
+#### [Installing R, RStudio and packages](installing.html)
 
 #### [Getting data into R](importing.html)
 
@@ -28,20 +31,22 @@ There are plenty of good books available on R. What follows in only some basic i
 
 #### [Grammar of data manipulation - starting with dplyr](dplyr.html)
 
-#### ...
+#### [More on grammar of graph and data](moregrammar.html)
 
-### Case examples
+#### ....
+
+### Potential case examples
 ___
 
 In no particular order:
-
-#### [Cleaning data](cleaning.html)
 
 #### Model fitting: Estimating length weight coefficient
 
 #### Standarization of cpue series using GLM
 
 #### Estimating total landings
+
+#### [Cleaning data](cleaning.html)
 
 #### ....
 

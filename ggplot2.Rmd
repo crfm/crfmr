@@ -417,9 +417,9 @@ ggplot(m) +
   coord_quickmap()
 ```
 
-The reslution of "word" is not very high as can be seen if only want iceland:
+The reslution of "world" is not very high as can be seen if only want Barbados:
 ```{r}
-m <- map_data("world", region = "denmark")
+m <- map_data("world", region = "Barbados")
 ggplot(m) +
   geom_polygon(aes(long, lat, group = group)) +
   coord_quickmap()
@@ -428,11 +428,21 @@ ggplot(m) +
 If we want higher resolution the object "worldHires" is often sufficient:
 ```{r}
 m <- map_data("worldHires")
-m <- m[m$long > -10 & m$long < 20 & m$lat > 50 & m$lat < 60,]
+m <- m[m$long > -85 & m$long < -60 & m$lat > 0 & m$lat < 30,]
+ggplot(m) +
+  geom_polygon(aes(long, lat, group = group)) +
+  coord_quickmap(ylim = c(7, 28))
+```
+
+But it is still not really good, e.g. if we check out St. Vincent:
+```{r}
+m <- m[m$region == "Saint Vincent",]
 ggplot(m) +
   geom_polygon(aes(long, lat, group = group)) +
   coord_quickmap()
 ```
+
+we only get the main island, not the Grenadines.
 
 ## gis: Lets generate a base map:
 

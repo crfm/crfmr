@@ -1,12 +1,14 @@
 # crfmR
 
-THIS IS SPACE IN PROGRESS - so keep calm
+## Preamble
+
+This space is in its infancy - so keep calm. And expect (for now) that it may change. The final product will be a set of webpages that (for now) will be hosted at at [this site](http://www.hafro.is/~einarhj/crfmr) - currently incomplete / only in a draft form.
 
 ## On this space
 
 The intent of this space if to provide general instructions in the use of R with specific focus on fisheries data that are generally collected in the CRFM region. It is in part of Einar Hjörleifsson ([see CRFM press release](http://www.crfm.int/index.php?option=com_k2&view=item&id=544:top-fisheries-data-expert-from-iceland-shares-expertise-with-crfm-countries&Itemid=179)) short term assignment at the CRFM St. Vincent office in the first two months of 2017.
 
-Upfront and in the spirit reproducability and open source knowledge the source code for all the documents are provided (including the text you are now reading which can be found on this web space as [README.Rmd](https://raw.githubusercontent.com/crfm/crfmr/master/README.Rmd)). If you have [RStudio](https://www.rstudio.com) already installed on your computer and some minimal experience in using it you should be able to regenerate the complete html-documents on your local computer from this space. If you can not, do not hesitate to send an email to einar.hjorleifsson@gmail.com
+Upfront and in the spirit reproducability and open source knowledge the source code for all the documents are provided (including the text you are now reading which can be found on this web space as [README.Rmd](https://raw.githubusercontent.com/crfm/crfmr/master/README.Rmd)). If you have [RStudio](https://www.rstudio.com) already installed on your computer and some minimal experience in using it you should be able to regenerate the complete html-documents on your local computer from this space.
 
 ### Context
 
@@ -14,19 +16,13 @@ The R language is becoming the _Lingua franca_ both in data science in general, 
 
 The R language has been endorsed by the fisheries scientist in CRFM fisheries reports as being an avenue worth pursuing. Two short courses have also been held under the CRFM umbrella during the scientific meetings.
 
-The document is aimed at covering the fundamental/generic basis of the grammar of data visualization and manipulation as well reproducible document writing where R is used as the sole working medium. Recent developments in the R community (falls under the umbrella of __tidyverse__) will be the basis of the course ("base R" only covered when and where needed).
+The documents (the web page) is aimed at covering the fundamental/generic basis of the grammar of data visualization and manipulation, case examples as well as introduction to reproducible document writing. Recent developments in the R community (falls under the umbrella of __tidyverse__) will be the basis of the course ("base R" only covered when and where needed) with emphasis in the case examples of using regional data.
 
-### Some notes with respect to potential focus of work
-
-* Summarize the current data management system with emphasis on subsequent standard statistic analysis of two countries with the aim:
-    - Defining strength and weaknesses of the current analysis system (from a technical perspective).
-    - Review national technical document (if available) that describe in detail the methodology (including software) used for standard calculations (e.g. annual catch statistics, catch per unit effort calculation, estimation of total effort, raising of sample catch at length to total catch, ...).
-    - Suggestions for improvement in analysis with particular focus of increasing efficiency, reproducability and transparability.
-    - Exploring potential of additional statistical product that may be of use in summarizing fisheries trends given the current data collection (e.g. using a metanalysis across species or fisheries to identify largest changes in trend over time, ...).
+### Some notes with respect to focus of work
 
 * Promote the use of R in fisheries data analysis by:
-    - Generate a manual7cookbook that describes the basis of importing data into R, tidying, munging and simple summation analysis of fisheries data by using familiar/common data types collected in the CRFM countries.
-    - Provide standard scripts (functions) as an alternative to the current methodologies used for the standard data analysis (presumably Excel).
+    - Provide a short introductory manual/cookbook that describes the basis of importing data into R, tidying, visualization, munging and summarization analysis of fisheries data by using familiar/common data types collected in the CRFM countries.
+    - Generate case examples, e.g. estimating total landings, standardization of cpue series, simple model fitting, ...
     
 * Benefits:
     - Provides a platform for standardized approach across countries, despite data being stored in a different medium.
@@ -34,7 +30,14 @@ The document is aimed at covering the fundamental/generic basis of the grammar o
     - Increases efficiency, re-producability and transparency.
     - Provides a stepping stone for more sophisticated analysis in R in the future.
 
-### For contributers
+* In addition, during the short term assignment, I will summarize the current data management system with emphasis on subsequent standard statistic analysis of two countries with the aim:
+    - Defining strength and weaknesses of the current analysis system (from a technical perspective).
+    - Review national technical document (if available) that describe in detail the methodology (including software) used for standard calculations (e.g. annual catch statistics, catch per unit effort calculation, estimation of total effort, raising of sample catch at length to total catch, ...).
+    - Suggestions for improvement in analysis with particular focus of increasing efficiency, reproducability and transparability.
+    - Exploring potential of additional statistical product that may be of use in summarizing fisheries trends given the current data collection (e.g. using a metanalysis across species or fisheries to identify largest changes in trend over time, ...).
+
+
+### For tech savy contributers
 
 #### Get a copy of the directory
 

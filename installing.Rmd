@@ -1,5 +1,5 @@
 ---
-title: "Intalling packages"
+title: "Intalling"
 output: html_document
 ---
 
@@ -8,9 +8,25 @@ knitr::opts_chunk$set(echo = TRUE,
                       eval = FALSE)
 ```
 
+## Installing R
+
+* Latest version of __R__ can be found under the [The Comprehensive R Archive Network](https://cran.r-project.org/)
+* If your platform is Windows it adviced to also install [Rtools](https://cran.r-project.org/bin/windows/Rtools)
+
+## Intalling RStudio
+
+* Latest version of __RStudio Desktop__: see [RStudio download page](https://www.rstudio.com/products/rstudio/download/)
+    * If you are adventurous install the latest [developmental version](https://www.rstudio.com/products/rstudio/download/preview)
+
+For those that want to get a head we recommend the following reads:
+
+  * [R for Data Science](http://r4ds.had.co.nz)
+  * [A rendered version of the new ggplot2 book](http://www.hafro.is/~einarhj/education/ggplot2)
+
+
 ## Installing packages
 
-Packages (libraries) can be thought of an extensions of the basic R. These are typically a set of functions or some data. Although the basic R comes with a number of standard packages they only form a tiny part of the current R-environment.
+Packages (libraries) can be thought of an extensions of the basic R. Packages typically contain a collection of functions or/and data. Although the basic R comes with a number of standard functions and packages they only form a tiny part of the current R-environment.
 
 Generally packages are installed with the following command:
 ```{r}
