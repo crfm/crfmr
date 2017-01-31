@@ -58,6 +58,8 @@ data_frame(biomass = c(0:1000),
 
 But enough of a preamble, our main objective here is to learn some more R, including standardization of catch per unit effort data using GLM.
 
+
+"They do not address any basic problems with cpue as an abundance index, such as hyperstability or hyperdepletion"
 # Getting the data into R
 
 We download the data directly from the internet using the `download.file` function
@@ -103,7 +105,7 @@ df <-
 
 # A tiny introduction to "date" format in R
 
-There are two columns that refer to time, year and month. Because I want later to plot data along time I might as well set up the proper date variable. Here I use the `ymd` function from the lubridate package (for further reading check the introductory [vignette](https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html)). Since there is no specific "day" in the data I just use the first of each month as a dummy constant.
+There are two columns that refer to time, year and month. Because I want later to plot data along time I might as well set up the proper date variable. Here I use the `ymd` function from the lubridate package (for further reading check the introductory [vignette](https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html)). Since there is no specific "day" in the data I just use the first day of each month as a dummy constant.
 
 ```{r}
 library(lubridate)
@@ -166,15 +168,19 @@ df %>%
   filter(year %in% 1995:2007) %>% 
   group_by(country, vessel) %>% 
   mutate(mean = cpue/mean(cpue)) %>% 
-  ggplot(aes(date, colour)) +
+  ungroup() %>% 
+  mutate(group = paste(country, vessel)) %>% 
+  ggplot(aes(date, mean, colour = group, fill = group)) +
   theme_bw() +
   geom_hline(yintercept = 1) +
   geom_smooth(aes(y = mean), span = 0.3) +
-  facet_wrap(~ vessel + country) +
-  labs(x = NULL, y = "CPUE index")
+  #facet_wrap(~ vessel + country) +
+  labs(x = NULL, y = "CPUE index") +
+  scale_fill_brewer(palette = "Set1") +
+  scale_colour_brewer(palette = "Set1")
 ```
 
-Here we have not plotted the actual data, just the "loess" smoother. We added a horizontal line (using `geom_hline`) to indicate the mean within each time series.
+Here we have not plotted the actual data, just the "loess" smoother. We added a horizontal line (using `geom_hline`) to indicate the mean within each time series. The default ggplot colour scheme was also overwritten using the `scale_xxx_brewer` (type `?scale_fill_brewer` to get further information of the function) to set of functions.
 
 # The seasonal patterns
 
@@ -237,12 +243,12 @@ ff2 <-
          vessel = paste(" ", vessel),
          catch = log(catch),
          effort = log(effort))
-m0 <-  
+model_full <-  
   lm(formula = catch ~ effort + year + month + country + vessel,
      data = ff2)
-summary(m0)
+summary(model_full)
 r0 <-
-  m0 %>% 
+  model_full %>% 
   tidy() %>%
   separate(term, c("variable", "value")) %>% 
   mutate(est = exp(estimate),
@@ -281,6 +287,56 @@ r0 %>%
   geom_point() +
   geom_linerange(aes(ymin = lower, ymax = upper)) +
   coord_flip()
+
+m1 <- glm(formula = catch ~ year + effort, data = ff2)
+r1 <-
+  m1 %>% 
+  tidy() %>% 
+  mutate(model = "1. + year")
+m2 <- glm(formula = catch ~ year + effort + vessel, data = ff2)
+r2 <-
+  m2 %>% 
+  tidy() %>% 
+  mutate(model = "2. + vessel")
+m3 <-  glm(formula = catch ~ year + effort + vessel + month, data = ff2)
+r3 <-
+  m3 %>%
+  tidy() %>% 
+  mutate(model = "3. + month")
+m4 <- lm(formula = catch ~ effort + year + month + country + vessel, data = ff2)
+r4 <-
+  m4 %>%
+  tidy() %>% 
+  mutate(model = "4. + country")
+  
+d <-
+  bind_rows(r0, r1) %>% 
+  bind_rows(r2) %>% 
+  bind_rows(r3) %>% 
+  separate(term, c("variable", "value")) %>% 
+  mutate(est = exp(estimate),
+           lower = exp(estimate - 2 * std.error),
+           upper = exp(estimate + 2 * std.error))
+
+d %>% 
+  tbl_df() %>% 
+  filter(variable == "year") %>% 
+  mutate(year = as.integer(value)) %>% 
+  ggplot(aes(year, est)) + 
+  geom_point() +
+  geom_linerange(aes(ymin = lower, ymax = upper)) +
+  geom_line() +
+  facet_grid(model ~ .) +
+  expand_limits(y = 0)
+
+d %>% 
+  tbl_df() %>% 
+  filter(variable == "year") %>% 
+  mutate(year = as.integer(value)) %>% 
+  ggplot(aes(year, est, colour = model)) + 
+  geom_line() +
+  expand_limits(y = 0)
+
 ```
 
 ```{r, eval = FALSE, echo = FALSE}
@@ -336,7 +392,7 @@ m2 <-
 m3 <-  
   lm(formula = log(catch)~log(effort) + factor(year),
      data = df)
-extractAIC(m0)
+extractAIC(model_full)
 extractAIC(m1)
 extractAIC(m2)
 extractAIC(m3)
@@ -420,4 +476,8 @@ d %>%
 
 
 It depends. If the message you want to carry is about the spread and variability of the data, then standard deviation is the metric to use. If you are interested in the precision of the means or in comparing and testing differences between means then standard error is your metric. Of course deriving confidence intervals around your data (using standard deviation) or the mean (using standard error) requires your data to be normally distributed. Bootstrapping is an option to derive confidence intervals in cases when you are doubting the normality of your data.
+
+http://www.theanalysisfactor.com/generalized-linear-models-glm-r-part4/
+  
+  http://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/icesjms/69/1/10.1093/icesjms/fsr174/2/fsr174.pdf?Expires=1486226713&Signature=fdD9QlEi4Rd8C3wKQCEHPdsNo1bcd8-t7HNFA9muBjARaQfG5DF1qW6S1HhMxlbxfq0ppXOu9sMWL9ccRrRiXlEAR-8xFTMsAWTiWiksaa1TPxW-YDCXhhPXB67AIZ1WLVSuTKaHV2t3IiwGFUBBNlftHzKkGdY-pQ~z~UPmsXEEpS2aIUHych6srKuOefZp156YCVpYRbqPxAJD2EPZuboTpBlS~TiE0T5Ej-5tzAGhjdKtkyhjDO4TqKtZKdknRifmkjJPkkMFt9Alxb7yZDojkUeWhoJuJJRC5iDL0T3ggasyrdhD5yElGJMh8-GJ2DbPxosedzSH99uYUyB50Q__&Key-Pair-Id=APKAIUCZBIA4LVPAVW3Q
 ```
