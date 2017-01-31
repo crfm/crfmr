@@ -1,6 +1,9 @@
 ---
 title: "The grammar of data manipulation"
-output: html_document
+output: 
+  html_document: 
+    number_sections: yes
+    toc: yes
 ---
 
 ```{r, echo = FALSE}
@@ -17,54 +20,46 @@ knitr::opts_chunk$set(out.width='750px', dpi=200)
 ![](img/data_science.png)
 
 # Preamble
+____
 
-...
+__Suggested reading material__: Chapter 5 on Data transformation in the [R for Data Science](http://r4ds.had.co.nz) book.
 
-### Needed libraries for this tutorial:
-```{r, message = FALSE, warning = FALSE, results='hide'}
+On the RStudio site there is also a nice [cheat sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+
+## Needed libraries for this tutorial:
+```{r, warning = FALSE, results='hide'}
 library(tidyverse)
+```
+
+```{r, echo = FALSE}
 library(readxl)
-library(lubridate)
+#library(lubridate)
 library(png)
 library(grid)
 ```
 
-### Getting the example data into R
 
+## Getting the example data into R
+
+The data we are going to use is [the web](http://www.hafro.is/~einarhj/crfmr/data-raw/SAU_FAO_31_v44-1.csv). It can be downloaded onto your computer by clicking on the link or what is better (because it becomes repoducable) download the data on to your computer (only have to do this once, the file is big):
+```{r, eval = FALSE}
+download.file("http://www.hafro.is/~einarhj/crfmr/data-raw/SAU_FAO_31_v44-1.csv",
+              "SAU_FAO_31_v44-1.csv")
+```
+and then read in the data each time you want to work on it:
 ```{r}
-sau <-
-  read.csv("/run/media/einarhj/stasi/prj2/crfm2017/crfmr/data-other/seaaroundus/SAU_FAO_31_v44-1.csv",
-           stringsAsFactors = FALSE)
-#sau <- 
-  #read_csv("/run/media/einarhj/stasi/prj2/crfm2017/crfmr/data-other/seaaroundus/SAU_FAO_31_v44-1.csv")
-
-sau <- tbl_df(sau)
+sau <- read.csv("SAU_FAO_31_v44-1.csv",
+                stringsAsFactors = FALSE)
 ```
 
-
-
-```{r, eval=FALSE}
-download.file('http://www.hafro.is/~einarhj/education/ofcouRse2016/data/ellidaar.xlsx',
-              'data-raw/ellidaar.xlsx')
-```
-
-
-```{r}
-ellidaar <- 
-  read_excel('data-raw/ellidaar.xlsx')
-```
-
-### Quick overview of the data
+## Quick overview of the data
 
 ```{r}
 glimpse(sau)
 ```
 
 
-## Reading material 
-
-* http://r4ds.had.co.nz/
-* https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf
 
 # Grammar of data
 
@@ -85,16 +80,16 @@ Commonly, when collating summaries by group, one wants to:
 
 For example, one might want to
 
-* quickly calculate summary statistics by country
+* quickly calculate summary statistics by species
 * perform group-wise transformations like scaling or standardizing
 * fit the same model to different ...
 
-## dplyr
+# dplyr
 
-Essentially dplyr and tidyr offer a collection of simple but powerful commands (or verbs) that facilitate this split-apply-combined process:
+Essentially dplyr offers a collection of simple but powerful verbs (functions) that facilitate this split-apply-combined process:
 
 * **filter**: keep rows matching criteria
-* **select**: pick columns by name
+* **select**: pick or drop columns by name
 * **arrange**: order the rows according to a variable
 * **mutate**: add new variables
 * **summarise**: reduce variables to values
@@ -109,6 +104,8 @@ The structure of these commands is always the same:
 * It recognizes the columns of the data.frame as variables, that is only need to call `col.name` instead of `dat$col.name`
 
 ## Select
+
+![](img/select.png)
 
 ```{r,width=150,echo=FALSE, eval = FALSE}
 img <- readPNG("img/select.png")
@@ -150,6 +147,8 @@ but this also removes columns.
 
 ## Rename
 
+![](img/rename.png)
+
 Instead of changing variable name with select (as shown above) one can use `rename`. The difference is that all original columns are intact. Lets for sake of sanity do that here on the original data frame (i.e. we overwrite the `sau` dataframe):
 
 ```{r}
@@ -177,10 +176,7 @@ sau <- select(sau, -area, -type, -latin)
 
 ## Filter
 
-```{r,width=150,echo=FALSE, eval = FALSE}
-img <- readPNG("img/filter.png")
-grid.raster(img)
-```
+![](img/filter.png)
 
 One can create a subset of the data using the `filter` command:
 ```{r}
@@ -190,11 +186,11 @@ sau.dominica <-
 glimpse(sau.dominica)
 ```
 
-and filter even further:
+and filter even further (here two countries and one commerical group):
 ```{r}
 sau.dominica.tunas <-
   filter(sau,
-         country == "Dominica",
+         country %in% c("Dominica", "Barbados"),
          cgroup == "Tuna & billfishes")
 glimpse(sau.dominica.tunas)
 ```
@@ -211,22 +207,20 @@ Filter can use any logical statement:
  a | b    ## a or b
  !a       ## not a
  is.na(a) ## is a equal to NA (missing)
- a %in% b ## what elements of column a are also in column b 
+ a %in% b ## elements of column a that are also in b 
 ```
 
-A related function is the `slice` function, that simply filters the data by row number
+A related function is the `slice` function, that simply filters the data by row number. E.g. to filter the 1st, 4th, 5th, 6th and the 100th row one can do:
 ```{r}
 sau.slice <- 
-  slice(sau, c(1,4:6,100)) ## 1st, 4th, 5th, 6th and the 100th row
+  slice(sau, c(1,4:6,100))
 glimpse(sau.slice)
 ```
 
 ## Arrange
 
-```{r,width=150,echo=FALSE, eval = FALSE}
-img <- readPNG("img/arrange.png")
-grid.raster(img)
-```
+![](img/arrange.png)
+
 
 Arrange by species name (in ascending order):
 ```{r}
@@ -247,6 +241,8 @@ glimpse(sau.arr2)
 ```
 
 ## Mutate
+
+![](img/mutate.png)
 
 NOTE: Need to check what the unit of the value is
 
@@ -271,6 +267,8 @@ sau.vperkg <-
 ```
 
 ## Summarise
+
+![](img/summarise.png)
 
 ```{r,width=150,echo=FALSE, eval = FALSE}
 img <- readPNG("img/summarise.png")
@@ -307,11 +305,9 @@ sau.summ2
 ```
 
 
-## Exercise
-
-* ...
-
 ## Group_by
+
+![](img/group_by.png)
 
 ```{r,width=150,echo=FALSE, eval = FALSE}
 img <- readPNG("img/group_summarise.png")
@@ -354,7 +350,7 @@ sau.summ4 <-
 sau.summ4
 ```
 
-# Combining verbs
+## Combining dplyr verbs
 
 In R one can apply functions to data repeatedly:
 ```{r, eval = FALSE}
@@ -393,7 +389,8 @@ sau %>%
 
 It basically means that we pass the dataframe sau as the first argument in the select function.
 
-## Excercise
+# tidyr
+___
 
-* ...
+Data are normally not tidy ...
 

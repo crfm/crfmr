@@ -23,6 +23,12 @@ For those that want to get a head we recommend the following reads:
   * [R for Data Science](http://r4ds.had.co.nz)
   * [A rendered version of the new ggplot2 book](http://www.hafro.is/~einarhj/education/ggplot2)
 
+## A gentle introduction to using R and RStudio
+
+There are miriads of documents on using R and RStudio. While searching the web, the following youtube link serves as good as any other.
+
+<iframe width="640" height="360" src="https://www.youtube.com/embed/lVKMsaWju8w" frameborder="0" allowfullscreen></iframe>
+
 
 ## Installing packages
 

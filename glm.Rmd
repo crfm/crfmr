@@ -1,0 +1,423 @@
+---
+title: "GLM - think of title name"
+output: 
+  html_document: 
+    fig_height: 3
+    fig_width: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE)
+```
+
+# Preamble
+
+> NOTE: This document is only partially completed
+
+In this exercise the power of combining functions from the dplyr and ggplot2 packages (and then some) as a data exploration tool to reveal potential patterns and trends is demonstrated.
+
+It is expected that readers are already familiar with the basics of data [manipulation](dplyr.html) and [plotting](ggplot2.html).
+
+The data we are going to use is the regional catch and effort flying fish data that was used as a part of the [UNU-FTP stock assessment course](http://fishvice.hafro.is/doku.php/crfm:start) that was held some years ago. It data contains observation of catch and effort by year, month, country and vessel type.
+
+The most interesting parameter we may want to focus on is the catch per unit effort. This is because it is often proposed that such data may be a proxy measure of the actual biomass index. In analytical models that use time series data (stock production model or the more data demanding length and/or age based models) the cpue index is often assumed to be linearly related to stock biomass or abundance (green line in the schematic graph below) through an equation sometimes referred to as "the link model"
+
+$CPUE = qX$
+
+where cpue can be either in mass or in numbers and equivalently the X either the stock biomass or stock numbers. The $q$ (often called catchability is estimated within the model).
+
+The linear relationship (read: "The model assumption") is often suspected to not hold (read: "Is wrong"), particular if the index (read: cpue) is base on fisheries dependent data. The reason in the latter case is that fisherman's behavior is driven by getting has high catch as possible with the least amount of effort (cost of fishing often plays a role). So even though the stock may e.g. be declining fishermen will change behavior by whatever means in order hold up the catch per unit effort.
+
+Add text to introduce: 
+
+$CPUE = qX^b$
+
+In other words the fisherman's objective is not estimating changes in stock size over time - it only us fisheries scientist that are sometimes daring enough to make that assumption. Often muttering at the same time "Given the data that one has this is the best one can do".
+
+```{r, echo = FALSE}
+library(tidyverse)
+data_frame(biomass = c(0:1000),
+           linear = 0.001 * biomass,
+           hyper = 0.001 * biomass^3,
+           uber  = 0.001 * biomass^0.3) %>% 
+  gather(variable, value, linear:uber) %>% 
+  group_by(variable, biomass) %>% 
+  ungroup() %>% 
+  group_by(variable) %>% 
+  mutate(biomass = biomass/max(biomass),
+         value = value/max(value)) %>% 
+  ggplot(aes(biomass, value, colour = variable)) +
+  theme_bw() +
+  geom_line() +
+  scale_x_continuous("Biomass", NULL) +
+  scale_y_continuous("CPUE", NULL) +
+  labs(colour = NULL) +
+  theme(legend.position = c(0.15, 0.82))
+```
+
+But enough of a preamble, our main objective here is to learn some more R, including standardization of catch per unit effort data using GLM.
+
+# Getting the data into R
+
+We download the data directly from the internet using the `download.file` function
+```{r, eval = FALSE}
+download.file(url = "http://fishvice.hafro.is/lib/exe/fetch.php/crfm:03statisticsglm.xls",
+              destfile = "flyfish.xls")
+```
+
+Once done you should have the flyfish Excel sheet in your current working directory (recall that to get information of the current working directory one can use the `getwd` command. If you open the workbook in Excel and go to sheet "flyfish" you see that the data we are interested in reading into R starts in row 3 and column "F" (number 6) and ends column "K" (number 6). Some may note that there is also data in column "L" (CPUE). We can omit them in the importing step because we can derive from other variables ("Weight (kg)" and "Trip" internally in R. Since the data is only a section of the worksheet we use the functions in the `XLConnect` package using the following code:
+
+```{r}
+library(XLConnect)
+library(tidyverse)
+library(broom)
+wb <- loadWorkbook("flyfish.xls")
+df <-
+  readWorksheet(wb,
+                sheet = "flyfish",
+                startRow = 3,
+                startCol = 6,
+                endCol   = 11) %>% 
+  tbl_df()
+```
+
+Lets see what we got:
+```{r}
+glimpse(df)
+```
+
+So we have `r nrow(df)` observations. Take note that the variable type of Year, Month, Weight..kg. and Trips are numerical values (labelled as `<dbl>` above) as expected.
+The column names are not to my liking (I want to minimize keyboard work in the code that follows) so I change the column names:
+```{r}
+names(df) <- c("year", "month", "country", "vessel", "catch", "effort")
+```
+
+And because we are going to be most interested in the catch per unit effort data we might as well generate that variable:
+
+```{r}
+df <-
+  df %>% 
+  mutate(cpue = catch/effort)
+```
+
+# A tiny introduction to "date" format in R
+
+There are two columns that refer to time, year and month. Because I want later to plot data along time I might as well set up the proper date variable. Here I use the `ymd` function from the lubridate package (for further reading check the introductory [vignette](https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html)). Since there is no specific "day" in the data I just use the first of each month as a dummy constant.
+
+```{r}
+library(lubridate)
+df <- 
+  df %>% 
+  mutate(cpue = catch/effort,
+         date = ymd(paste(year, month, 1, sep = "-")))
+```
+
+If you now take a glimpse at the data you notice that the type for the date column is labelled as `<date>` (i.e. as expected).
+
+# An overall view of the data
+
+```{r}
+df %>% 
+  ggplot(aes(date, effort, colour = country)) +
+  geom_line() +
+  facet_wrap(~ vessel) +
+  labs(x = NULL, y = "Number of trips")
+df %>% 
+  ggplot(aes(date, catch, colour = country)) +
+  geom_line() +
+  facet_wrap(~ vessel) +
+  labs(x = NULL, y = "Catch [kg]")
+df %>% 
+  ggplot(aes(date, cpue, colour = country)) +
+  geom_line() +
+  facet_wrap(~ vessel) +
+  labs(x = NULL, y = "CPUE [kg/trip]")
+```
+
+The main patterns one observes is:
+
+* There is strong seasonality in the data.
+* The catch per trip within dayboats seems to be higher for Tobago than the other two countries.
+* The catch per trip is generally higher for the iceboats than the dayboats.
+
+To reveal long term trend in catch per unit of effort we could try to use a smoother:
+
+```{r}
+df %>% 
+  ggplot(aes(date, cpue, colour = country)) +
+  geom_point(size = 0.5) +
+  geom_smooth(span = 0.3) +
+  facet_wrap(~ vessel) +
+  labs(x = NULL, y = "CPUE [kg/trip]")
+```
+
+Among the general patterns are:
+
+* The cpue of the Iceboats shows a general decline with time until around 2015, thereafter increasing to historical high values in the terminal year.
+* The cpue of the Tobago dayboat show a general increase until around 2003 but thereafter some decline.
+* There seems to be an increase in cpue of the dayboats in Barbados in recent years.
+* The pattern in the St. Lucia data are characterized by a temporal increase in the beginning of this century.
+
+In order to make comparisons across the cpue series one can normalize the data (notice that I start filtering the data such that only common year ranges in the data (1995-2007) are included in the analysis) such that mean of the data within groups (country and vessel) is the equal to 1 by using the combination of `group_by` and `mutate` functions:
+
+```{r}
+df %>% 
+  filter(year %in% 1995:2007) %>% 
+  group_by(country, vessel) %>% 
+  mutate(mean = cpue/mean(cpue)) %>% 
+  ggplot(aes(date, colour)) +
+  theme_bw() +
+  geom_hline(yintercept = 1) +
+  geom_smooth(aes(y = mean), span = 0.3) +
+  facet_wrap(~ vessel + country) +
+  labs(x = NULL, y = "CPUE index")
+```
+
+Here we have not plotted the actual data, just the "loess" smoother. We added a horizontal line (using `geom_hline`) to indicate the mean within each time series.
+
+# The seasonal patterns
+
+> TODO: Add text to explain the code
+
+```{r}
+p <-
+  df %>% 
+  filter(year %in% 1995:2007) %>%
+  ggplot(aes(factor(month), cpue)) +
+  geom_boxplot()
+p
+p + facet_wrap(~ vessel)
+
+df %>% 
+  filter(year %in% 1955:2007) %>% 
+  group_by(month, vessel) %>% 
+  summarize(mean = mean(cpue),
+            p005 = quantile(cpue, 0.05),
+            p050 = quantile(cpue, 0.50),
+            p095 = quantile(cpue, 0.95)) %>% 
+  ggplot(aes(factor(month))) +
+  geom_linerange(aes(ymin = p005,
+                     ymax = p095)) +
+  geom_point(aes(y = p050)) +
+  geom_point(aes(y = mean), colour = "red") +
+  facet_wrap(~ vessel, scale = "free_y")
+
+df %>% 
+  filter(year %in% 1955:2007) %>% 
+  ggplot(aes(factor(month), cpue)) +
+  theme_bw() +
+  stat_summary(fun.data = "mean_cl_boot", colour = "red", size = 1) +
+  facet_wrap(~ vessel, scale = "free_y")
+```
+
+# The patterns among fleet
+
+> TODO: Add text to explain the code
+
+```{r}
+df %>% 
+  filter(year %in% 1955:2007) %>% 
+  ggplot(aes(vessel, cpue)) +
+  theme_bw() +
+  stat_summary(fun.data = "mean_cl_boot", colour = "red", size = 1)
+```
+
+# An introduction to GLM
+
+> TODO: Add text here to explain model and code
+
+```{r}
+ff2 <-
+  df %>% 
+  #filter(year >= 1995) %>% 
+  mutate(year = paste0(" ", year),
+         month = paste0(" ", month),
+         country = paste(" ", country),
+         vessel = paste(" ", vessel),
+         catch = log(catch),
+         effort = log(effort))
+m0 <-  
+  lm(formula = catch ~ effort + year + month + country + vessel,
+     data = ff2)
+summary(m0)
+r0 <-
+  m0 %>% 
+  tidy() %>%
+  separate(term, c("variable", "value")) %>% 
+  mutate(est = exp(estimate),
+         lower = exp(estimate - 2 * std.error),
+         upper = exp(estimate + 2 * std.error))
+df2 <- tibble(variable = c("year", "month", "country", "vessel"),
+             value = c("1988", "1", "Barbados", "Dayboats"),
+             est = c(1, 1, 1, 1))
+r0 <-
+  r0 %>% 
+  bind_rows(df2)
+r0 %>% 
+  filter(variable == "year") %>% 
+  mutate(year = as.integer(value)) %>% 
+  ggplot(aes(year, est)) + 
+  geom_point() +
+  geom_linerange(aes(ymin = lower, ymax = upper)) +
+  geom_line()
+r0 %>% 
+  filter(variable == "month") %>% 
+  mutate(month = as.integer(value)) %>% 
+  ggplot(aes(month, est)) + 
+  geom_point() +
+  geom_linerange(aes(ymin = lower, ymax = upper)) +
+  geom_line() +
+  scale_x_continuous(breaks = c(1:12))
+r0 %>% 
+  filter(variable == "country") %>% 
+  ggplot(aes(value, est)) +
+  geom_point() +
+  geom_linerange(aes(ymin = lower, ymax = upper)) +
+  coord_flip()
+r0 %>% 
+  filter(variable == "vessel") %>% 
+  ggplot(aes(value, est)) +
+  geom_point() +
+  geom_linerange(aes(ymin = lower, ymax = upper)) +
+  coord_flip()
+```
+
+```{r, eval = FALSE, echo = FALSE}
+# LEFTOVERS
+df %>% 
+  ggplot(aes(effort, catch, colour = country)) +
+  geom_point() +
+  facet_wrap(~ vessel, scale = "free")
+
+df %>% 
+  filter(vessel == "Dayboats") %>% 
+  ggplot(aes(log(effort), log(catch), colour = country)) +
+  theme_bw() +
+  geom_point(alpha = 0.6, size = 1) +
+  geom_smooth(method = "lm")
+
+# food for later thought
+df %>% 
+  filter(vessel == "Dayboats",
+         effort <= 195) %>% 
+  ggplot(aes(log(effort), log(catch), colour = country)) +
+  theme_bw() +
+  geom_point(alpha = 0.6, size = 1) +
+  geom_smooth(method = "lm")
+
+df %>% 
+  filter(vessel == "Dayboats") %>% 
+  ggplot(aes(country, cpue)) +
+  theme_bw() +
+  geom_boxplot()
+df %>% 
+  filter(vessel == "Dayboats") %>% 
+  ggplot(aes(country, cpue)) +
+  theme_bw() +
+  stat_summary(fun.data = "mean_cl_boot", colour = "red", size = 1)
+
+
+df %>% 
+  group_by(year, country, vessel) %>% 
+  summarise(catch = sum(catch)/1e3) %>% 
+  ggplot(aes(year, catch)) +
+  geom_col() +
+  facet_wrap(~ vessel + country)#, scale = "free_y")
+
+
+
+m1 <-  
+  lm(formula = log(catch)~log(effort) + factor(year) + factor(month) + vessel,
+     data = df)
+m2 <-  
+  lm(formula = log(catch)~log(effort) + factor(year) + factor(month),
+     data = df)
+m3 <-  
+  lm(formula = log(catch)~log(effort) + factor(year),
+     data = df)
+extractAIC(m0)
+extractAIC(m1)
+extractAIC(m2)
+extractAIC(m3)
+
+d <-
+  df %>% 
+  group_by(year, country, vessel) %>% 
+  summarise(catch = sum(catch),
+            effort = sum(effort),
+            cpue.mean = mean(cpue),
+            cpue.std = sd(cpue),
+            Fproxy = catch/cpue.mean)
+
+d %>% 
+  ggplot(aes(year, Fproxy, colour = vessel)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~ country, scale = "free_y")
+
+# https://www.r-bloggers.com/standard-deviation-vs-standard-error/
+
+df %>% 
+  ggplot(aes(factor(month), cpue)) +
+  geom_boxplot()
+
+p <- 
+  df %>% 
+  ggplot() +
+  scale_x_continuous(breaks = c(1:12))
+p +
+  stat_summary(aes(month, cpue, group = month),
+               fun.data = "mean_cl_boot", colour = "red", size = 1)
+
+# https://cran.r-project.org/web/packages/broom/vignettes/bootstrapping.html
+
+#bootnls <- mtcars %>% bootstrap(100) %>%
+#    do(tidy(nls(mpg ~ k / wt + b, ., start=list(k=1, b=0))))
+
+one_boot <- function(d) {
+  df %>% 
+  group_by(month) %>% 
+  sample_frac(size = 0.5) %>%
+  summarise(m = mean(cpue))
+}
+
+
+x <- list()
+for(i in 1:5000) {
+  x[[i]] <- one_boot(df) 
+}
+x2 <-
+  x %>% 
+  bind_rows() %>% 
+  group_by(month) %>% 
+  summarise(med2    = mean(m),
+            ci.low  = quantile(m, probs = 0.025),
+            ci.high = quantile(m, probs = 0.975))
+
+p +
+  stat_summary(aes(month, cpue, group = month),
+               fun.data = "mean_cl_boot", colour = "red", size = 1) +
+  geom_point(data = x2, aes(month, med2)) +
+  geom_linerange(data = x2, aes(month, ymin = ci.low, ymax = ci.high))
+
+
+
+d <- 
+  df %>% 
+  group_by(month) %>% 
+  summarise(n.obs = n(),
+            m = mean(cpue),
+            std.dev = sd(cpue),       # the standard deviation
+            sem = std.dev/n.obs,      # the standard error
+            ci.lower = m - 2 * sem,   # lower 95% confidence interval (approximate)
+            ci.upper = m + 2 * sem)   # upper 95% confidence interval (approximate)
+glimpse(d)
+d %>% 
+  ggplot(aes(month, m)) +
+  geom_errorbar(aes(ymin = m - std.dev, ymax = m + std.dev)) + 
+  geom_errorbar(aes(ymin = ci.lower, ymax = ci.upper))
+
+
+It depends. If the message you want to carry is about the spread and variability of the data, then standard deviation is the metric to use. If you are interested in the precision of the means or in comparing and testing differences between means then standard error is your metric. Of course deriving confidence intervals around your data (using standard deviation) or the mean (using standard error) requires your data to be normally distributed. Bootstrapping is an option to derive confidence intervals in cases when you are doubting the normality of your data.
+```

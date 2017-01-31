@@ -7,48 +7,64 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This space is in progress, so keep calm.
+This space is in progress, so keep calm. And it is for now, live - meaning it is made available at the same time as it is being written. So expect changes, additions, etc.
 
 ## Preamble
 ___
 
-The content of this space is split into two main section: A short introduction into R with emphasis on data munging, summarisation and presentation followed by a section of (hopefully) regional case examples.
+The intent of this space if to provide general instructions in the use of R with specific focus on fisheries data that are generally collected in the CRFM region. It is in part of Einar Hjörleifsson ([see CRFM press release](http://www.crfm.int/index.php?option=com_k2&view=item&id=544:top-fisheries-data-expert-from-iceland-shares-expertise-with-crfm-countries&Itemid=179)) short term assignment at the CRFM St. Vincent office in the first two months of 2017.
 
-It is anticipated that the scripts provided will aid those that would like to get started in using R as well as for those that would like to get more experience in using R. The CRFM fisheries scientists community (current focus is the Data and Methods Working Group) is encoured to run the scripts themselves at their own pace. When issues arise, you can send me an email (einar.hjorleifson at gmail.com) or what would be preferrable send an email to the data and methods dgroup.
+The content of this space is split into two main section: An introduction into R with emphasis on data visualization, munging, summarisation and presentation followed by a section of (hopefully) regional case examples.
 
-The background/motivation for the work can currently be found [here](README.html). 
+It is anticipated that the scripts provided will aid those that would like to get started in using R as well as for those that would like to get more experience in using R. The list of case examples below should be considered incomplete as of now. Emphasis will be put on using practical regional cases that may serve as a seeder for scientists own work. Depending on enthusiasm the list of case example may grow after the short term assignment at the St. Vincent in the first two months of 2017.
+
+The CRFM fisheries scientists community (current focus is the Data and Methods Working Group, which already have had some R courses) is encouraged to run the scripts themselves at their own pace. When issues arise (they will), you can send me an email (einar.hjorleifson at gmail.com) or what would be preferable send an email to the data and methods dgroup.
 
 ## The basis
 ___
 
 There are plenty of good books available on R. What follows in only some basic instructions to get people started.
 
-#### [Installing R, RStudio and packages](installing.html)
+* [Installing R, RStudio and packages](installing.html)
 
-#### [Getting data into R](importing.html)
+* [Getting data into R](importing.html)
 
-#### [Grammar of data visualization - staring with ggplot2](ggplot2.html)
+* [Grammar of data visualization - staring with ggplot2](ggplot2.html)
 
-#### [Grammar of data manipulation - starting with dplyr](dplyr.html)
+* [Grammar of data manipulation - starting with dplyr](dplyr.html)
 
-#### [More on grammar of graph and data](moregrammar.html)
+* [Grammar of data manipulation - short note on tidyr](tidyr.html)
 
-#### ....
+* [Data drill: Exploring the Sea Around Us data](sau.html)
+
+* ....
 
 ### Potential case examples
 ___
 
-In no particular order:
 
-#### Model fitting: Estimating length weight coefficient
+* [Reading in data from structured Excel sheets](tidy_excel.html)
 
-#### Standarization of cpue series using GLM
+* The accompanying [Excel file](http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx)
 
-#### Estimating total landings
+* Model fitting in R
+    - Note this going to cover general statistical modeling, not analytical stock assessment models.
 
-#### [Cleaning data](cleaning.html)
+* Estimating total landings - standardized approach
+    - Calculation of landing data in a single R script
+    - Should aim at showing uncertainties in the estimates
 
-#### ....
+* [Standarization of cpue series](glm.html)
+    - Example of fitting General Linearized model in R using the flying fish cpue data.
+
+
+* [Cleaning data](cleaning.html)
+
+* Another case example
+
+* Yet another case example
+
+... and so on
 
 
 

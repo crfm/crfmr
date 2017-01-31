@@ -14,6 +14,11 @@ source("R/common.R")
 
 # Preamble
 
+Nice resources:
+
+* [ggplot2 online documentation](http://docs.ggplot2.org/current)
+* [The graph section of R cookbook](http://www.cookbook-r.com/Graphs)
+
 ### Needed libraries for this tutorial:
 ```{r, message = FALSE, warning = FALSE, results='hide'}
 library(ggplot2)
@@ -22,6 +27,24 @@ library(gridExtra)
 library(maps)
 library(mapdata)
 ```
+
+Note if you have not installed and of the above packages, e.g. you get an error message when running:
+```
+library(ggmap)
+```
+saying:
+```
+Error in library(ggmap) : there is no package called ‘ggmap’
+```
+then you need to install the package by running:
+```{r, eval = FALSE}
+install.packages("ggmap")
+```
+Once done you of course need to run again:
+```{r, eval = FALSE}
+library(ggmap)
+```
+
 
 ### Getting example data into R
 ```{r}
