@@ -1,4 +1,4 @@
-read_high_seas_data <- function(wb, sheets, year) {
+read_high_seas_data <- function(wb, sheets, year, verbose = FALSE) {
   
   for(i in 1:length(sheets)) {
     # set up column names
@@ -6,7 +6,7 @@ read_high_seas_data <- function(wb, sheets, year) {
     species <- c("YFT", "SKJ", "ALB", "BET", "SWO", "WAH", "SPF", "SAI", "Mahi Mahi", "YU KUM")
     details <- c("Wt.T", "weight", "number", "n.measured", "length")
     cn2 <- paste(rep(species, each = 5), details, sep = "_")
-    cn3 <- c("Other_Wt.T", "Other_weight", "Sharks_n", "Other_misc",
+    cn3 <- c("Other_Wt.T", "Other_weight", "Ohter_n", "Other_misc",
              "Sharks_Wt.T", "Sharks_weight", "Sharks_n")
     cn4 <- c("bait_Squid", "bait_Sardine", "bait_Mackerel", "bait_Sanma")
     cn <- c(cn1, cn2, cn3, cn4)
@@ -21,17 +21,42 @@ read_high_seas_data <- function(wb, sheets, year) {
                        header = FALSE,
                        colTypes = "character")
     names(d) <- cn
+    
+    
     d <- 
       d %>% 
+      filter(!is.na(month), !is.na(day)) %>% 
       unite(date, month, day, sep = "-") %>% 
       mutate(date = paste(year, date, sep = "-"),
-             date = ymd(date)) %>% 
-      filter(!is.na(date))
+             date = ymd(date))
+
+    # check if catch reported but effort missing
     
-    daily.record <- 
+    if(verbose) {
+      x2 <-
+        d %>% mutate(id = 1:n(),
+                     hooks = as.numeric(hooks)) %>% 
+        select(id, hooks, contains("weight")) %>% 
+        gather(species, catch, -c(id, hooks)) %>% 
+        mutate(catch = as.numeric(catch)) %>% 
+        group_by(id) %>% 
+        summarise(effort = max(hooks),
+                  catch = sum(catch, na.rm = TRUE)) %>% 
+        mutate(check = ifelse(catch > 0 & is.na(effort), 
+                              "no effort",
+                              "ok")) %>% 
+        filter(check == "no effort")
+      if(nrow(x2) > 0) warning(paste("no effort where catch is reported",
+                                     "in sheet", sheets[i]))
+    }
+    
+    tmp.daily.record <- 
       d %>% 
       select(date:hooks, bait_Squid:bait_Sanma) %>%
-      mutate(temp = as.numeric(temp))
+      mutate(temp = as.numeric(temp),
+             hooks = as.numeric(hooks)) %>% 
+      filter(!is.na(hooks)) %>% 
+      tbl_df()
     d <-
       d %>% 
       select(date, YFT_Wt.T:Sharks_weight)
@@ -57,7 +82,7 @@ read_high_seas_data <- function(wb, sheets, year) {
     Lenghts <- little_helper(d, "length") %>% rename(length = value)
     misc <- little_helper(d, "misc") %>% rename(misc = value)
     
-    catch <-
+    tmp.catch <-
       wt.t %>% 
       left_join(weight, by = c("date", "species")) %>% 
       left_join(number, by = c("date", "species")) %>% 
@@ -66,22 +91,20 @@ read_high_seas_data <- function(wb, sheets, year) {
       left_join(misc, by = c("date", "species")) %>% 
       mutate(weight = as.numeric(weight),
              n = as.numeric(n),
-             n.measured = as.numeric(n.measured))
+             n.measured = as.numeric(n.measured),
+             sheet = sheets[i]) %>% 
+      tbl_df()
     
-    d <-
-      daily.record %>% 
-      left_join(catch, by = "date") %>% 
-      mutate(sheet = sheets[i])
     if(i == 1) {
-      res <- d
+      daily.record <- tmp.daily.record
+      catch <- tmp.catch
     } else {
-      res <- bind_rows(res, d)
+      daily.record <- bind_rows(daily.record, tmp.daily.record)
+      catch <- rbind(catch, tmp.catch)
     }
   }
   
-  res <- 
-    res %>%
-    select(date, lat:hooks, species:misc, bait_Squid:bait_Sanma)
+  res <- list(daily.record = daily.record, catch = catch)
   return(res)
   
 }

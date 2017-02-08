@@ -27,39 +27,48 @@ Read in data from Marinherio-2015.xlsx:
 ```{r}
 wb <- loadWorkbook("data-raw/stvincent/Marinherio-2015.xlsx")
 sheets <- getSheets(wb)
-d1 <- 
-  read_high_seas_data(wb, sheets, year = 2015) %>% 
+res1 <- read_high_seas_data(wb, sheets, year = 2015)
+catch1 <- 
+  res1$catch %>% 
   mutate(ship = "Marinherio")
+daily.record1 <- 
+  res1$daily.record %>% 
+  mutate(ship = "Marinherio")
+
 ```
 
 Lets see what we got:
 ```{r}
-glimpse(d1)
+glimpse(daily.record1)
+glimpse(catch1)
 ```
 
 We have got fewer columns than in the excel sheet because here a row represents one single species record. The excel sheets are of "wide" format while here we have a "long" format. Think of the latter as being the data of which one then can do "pivot table" summaries in excel. 
 
-Now, lets also read in data from Marinherio-2015.xlsx:
+Now, lets also read in data from OA11-2015.xlsx:
 ```{r}
 wb <- loadWorkbook("data-raw/stvincent/OA11-2015.xlsx")
 sheets <- getSheets(wb)
-d2 <- 
-  read_high_seas_data(wb, sheets, year = 2015) %>% 
+res2 <- read_high_seas_data(wb, sheets, year = 2015)
+catch2 <- 
+  res2$catch %>% 
+  mutate(ship = "Ocean Atun 11")
+daily.record2 <- 
+  res2$daily.record %>% 
   mutate(ship = "Ocean Atun 11")
 ```
 
 Combine the data (here just the 2 ships):
 ```{r}
-data_raw <-
-  bind_rows(d1, d2) %>% 
-  tbl_df()
+catch <- bind_rows(catch1, catch2)
+dr <- bind_rows(daily.record1, daily.record2)
 ```
 
 ### Some summaries
 
 Here we just calculate the annual catch by species in terms of number and weight:
 ```{r}
-data_raw %>% 
+catch %>% 
   group_by(species) %>% 
   summarise(number = sum(n, na.rm = TRUE),
             weight = sum(weight, na.rm = TRUE)) %>% 
@@ -67,6 +76,59 @@ data_raw %>%
 ```
 
 But this can easily be done in any which way and the output format can be as any which way(csv-file, excel file or just like here as an html document (pdf or word is also possible). One could even export the tables and then read it back into an excel sheet if so desired.
+
+### ST03
+
+```{r}
+d <-
+  dr %>% 
+  separate(lon, c("ew", "lon"), sep = 1, convert = T) %>% 
+  separate(lat, c("ns", "lat"), sep = 1, convert = T) %>% 
+  mutate(ew = toupper(ew),
+         lon = ifelse(ew == "W", -lon, lon),
+         ns = toupper(ns),
+         lat = ifelse(ns == "N", lat, -lat)) %>% 
+  filter(!is.na(lon), !is.na(lat)) %>% 
+  unite(QuadCd, ns, ew, sep = "") %>% 
+  mutate(lon1 = plyr::round_any(lon, 5, floor),
+         lat1 = plyr::round_any(lat, 5, floor),
+         year = year(date),
+         month = month(date))
+
+effort <-
+  d %>% 
+  group_by(year, month, QuadCd, lat1, lon1) %>% 
+  summarise(effort = sum(hooks)) %>% 
+  mutate(grid = "5x5", 
+         Eff1TypeCd = "NO.HOOKS")
+
+catch22 <-
+  catch %>% 
+  filter(!is.na(weight)) %>% 
+  left_join(d) %>%
+  filter(is.na(year))
+  group_by(year, month, QuadCd, lat1, lon1, species) %>% 
+  summarise(catch = sum(weight)) %>% 
+  spread(species, catch)
+
+# expected same number of rows
+nrow(catch22)
+nrow(effort)
+
+d22 <-
+  effort %>% 
+  full_join(catch22)
+```
+
+
+```{r}
+wb <- loadWorkbook("data-raw/stvincent/ST03-T2CE_VCT2015.xlsx")
+STO3 <- 
+  readWorksheet(wb, 1,
+                startRow = 27) %>% 
+  tbl_df()
+sum(STO3$Effort1)
+```
 
 
 ```{r}
@@ -179,6 +241,7 @@ d <-
   readWorksheet(wb, 1,
                 startRow = 27) %>% 
   tbl_df()
+STO3 <- d
 nrow(d)
 x <-
   d %>% 
