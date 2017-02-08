@@ -1,0 +1,252 @@
+---
+title: "High seas data - some simple experiment"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(XLConnect)
+library(lubridate)
+library(stringr)
+source("R/read_high_seas_functions.R")
+```
+
+### Read in the data
+
+The function `read_high_seas_data` used below read in all the sheets in a workbook and reformat the data into a proper format. I am not showing the code that is inside the function, it is quite long and obtuse for people that are not very familiar with R.
+
+Read in data from Marinherio-2015.xlsx:
+```{r}
+wb <- loadWorkbook("data-raw/stvincent/Marinherio-2015.xlsx")
+sheets <- getSheets(wb)
+d1 <- 
+  read_high_seas_data(wb, sheets, year = 2015) %>% 
+  mutate(ship = "Marinherio")
+```
+
+Lets see what we got:
+```{r}
+glimpse(d1)
+```
+
+We have got fewer columns than in the excel sheet because here a row represents one single species record. The excel sheets are of "wide" format while here we have a "long" format. Think of the latter as being the data of which one then can do "pivot table" summaries in excel. 
+
+Now, lets also read in data from Marinherio-2015.xlsx:
+```{r}
+wb <- loadWorkbook("data-raw/stvincent/OA11-2015.xlsx")
+sheets <- getSheets(wb)
+d2 <- 
+  read_high_seas_data(wb, sheets, year = 2015) %>% 
+  mutate(ship = "Ocean Atun 11")
+```
+
+Combine the data (here just the 2 ships):
+```{r}
+data_raw <-
+  bind_rows(d1, d2) %>% 
+  tbl_df()
+```
+
+### Some summaries
+
+Here we just calculate the annual catch by species in terms of number and weight:
+```{r}
+data_raw %>% 
+  group_by(species) %>% 
+  summarise(number = sum(n, na.rm = TRUE),
+            weight = sum(weight, na.rm = TRUE)) %>% 
+  knitr::kable()
+```
+
+But this can easily be done in any which way and the output format can be as any which way(csv-file, excel file or just like here as an html document (pdf or word is also possible). One could even export the tables and then read it back into an excel sheet if so desired.
+
+
+```{r}
+x <-
+  data_raw %>% 
+  tbl_df() %>% 
+  separate(lon, c("ew", "lon"), sep = 1, convert = T) %>% 
+  separate(lat, c("ns", "lat"), sep = 1, convert = T) %>% 
+  mutate(ew = toupper(ew),
+         lon = ifelse(ew == "W", -lon, lon),
+         ns = toupper(ns),
+         lat = ifelse(ns == "N", lat, -lat)) %>% 
+  select(-ew, -ns)
+
+x2 <-
+  x %>% 
+  select(date, lon, lat, ship) %>% 
+  distinct() %>% 
+  filter(!is.na(lon), !is.na(lat))
+library(maps)
+m <- map_data("world")
+ggplot() +
+  theme_bw() +
+  geom_polygon(data = m, aes(long, lat, group = group), fill = "grey") +
+  geom_point(data = x2, aes(lon, lat, colour = ship), size = 0.5) +
+  coord_quickmap(xlim = range(x$lon, na.rm = TRUE),
+                 ylim = range(x$lat, na.rm = TRUE)) +
+  labs(x= NULL, y = NULL)
+```
+
+```{r}
+wb <- loadWorkbook("data-raw/stvincent/ST02-T1NC_VCT 2015.xlsx")
+country <- 
+  readWorksheet(wb, "codes", startRow = 2,
+                         endCol = 6) %>% 
+  tbl_df()
+species <- 
+  readWorksheet(wb, "codes",
+                startRow = 2,
+                startCol = 8,
+                endCol = 14) %>% 
+  tbl_df()
+management <-
+  readWorksheet(wb, "codes",
+                startRow = 2,
+                endRow = 26,
+                startCol = 16,
+                endCol = 18) %>% 
+  tbl_df()
+sarea <- 
+  readWorksheet(wb, "codes",
+                startRow = 30,
+                startCol = 16,
+                endCol = 19) %>% 
+  tbl_df()
+gear <-
+  readWorksheet(wb, "codes",
+                startRow = 2,
+                endRow = 53,
+                startCol = 21,
+                endCol = 23) %>% 
+  tbl_df()
+dsource <-
+  readWorksheet(wb, "codes",
+                startRow = 57,
+                endRow = 64,
+                startCol = 21,
+                endCol = 22) %>% 
+  tbl_df()
+zones <-
+  readWorksheet(wb, "codes",
+                startRow = 68,
+                endRow = 71,
+                startCol = 21,
+                endCol = 22) %>% 
+  tbl_df()
+corr_type <-
+  readWorksheet(wb, "codes",
+                startRow = 75,
+                endRow = 84,
+                startCol = 21,
+                endCol = 22) %>% 
+  tbl_df()
+version <-
+  readWorksheet(wb, "codes",
+                startRow = 88,
+                endRow = 90,
+                startCol = 21,
+                endCol = 22) %>% 
+  tbl_df()
+content <-
+  readWorksheet(wb, "codes",
+                startRow = 94,
+                endRow = 97,
+                startCol = 21,
+                endCol = 22) %>% 
+  tbl_df()
+tarea <-
+  readWorksheet(wb, "codes",
+                startRow = 3,
+                startCol = 25,
+                endCol = 29) %>% 
+  tbl_df()
+```
+
+
+```{r}
+wb <- loadWorkbook("data-raw/stvincent/ST03-T2CE_VCT2015.xlsx")
+d <- 
+  readWorksheet(wb, 1,
+                startRow = 27) %>% 
+  tbl_df()
+nrow(d)
+x <-
+  d %>% 
+  select(GeoGridCd:Lon) %>% 
+  distinct() %>% 
+  mutate(lon = -Lon,
+         lat = ifelse(QuadCd == "NW", Lat, -Lat))
+ggplot() +
+  geom_polygon(data = m, aes(long, lat, group = group)) +
+  geom_point(data = x, aes(lon, lat, colour = QuadCd)) +
+  coord_quickmap(xlim = range(x$lon), ylim = range(x$lat))
+
+d2 <-
+  d %>% 
+  gather(key = species, value = weight, sp01:sp99)
+
+
+d2 %>%
+  select(Month, QuadCd, Lon, Lat, Effort1) %>% 
+  distinct() %>% 
+  nrow()
+nrow(d)
+
+```
+
+Square system
+```{r}
+x <-
+  data_raw %>% 
+  tbl_df() %>% 
+  separate(lon, c("ew", "lon"), sep = 1, convert = T) %>% 
+  separate(lat, c("ns", "lat"), sep = 1, convert = T) %>% 
+  mutate(ew = toupper(ew),
+         lon = ifelse(ew == "W", -lon, lon),
+         ns = toupper(ns),
+         lat = ifelse(ns == "N", lat, -lat)) %>% 
+  filter(!is.na(lon), !is.na(lat)) %>% 
+  mutate(lon1 = plyr::round_any(lon, 5, floor),
+         lat1 = plyr::round_any(lat, 5, floor)) %>% 
+  select(-ew, -ns) 
+
+df <- data_frame(x = c(66.64, 62.3), y = c(-21.2, -22))
+df %>% 
+  mutate(x2 = plyr::round_any(x, 0.1),
+         y2 = plyr::round_any(y, 5))
+
+# the iccat 5x5 square system:
+#    15S ≤ Lat < 20S AND 20W ≤ Lon < 25W   6 / 3 / 15 / 20
+df <- data_frame(lat = c(19.9, 20, 23, 24.9, 25),
+                 lon = c(14.9, 15, 19, 19.9, 20))
+df %>% 
+  mutate(y = plyr::round_any(lat, 5, floor),
+         x = plyr::round_any(lon, 5, floor))
+```
+
+
+```{r}
+tmp <-
+  data_raw %>% 
+  select(date:lon, ship) %>% 
+  tbl_df() %>% 
+  separate(lon, c("ew", "lon"), sep = 1, convert = T) %>% 
+  separate(lat, c("ns", "lat"), sep = 1, convert = T) %>% 
+  mutate(ew = toupper(ew),
+         lon = ifelse(ew == "W", -lon, lon),
+         ns = toupper(ns),
+         lat = ifelse(ns == "N", lat, -lat)) %>% 
+  select(-ew, -ns) %>% 
+  filter(!is.na(lon), !is.na(lat))
+```
+
