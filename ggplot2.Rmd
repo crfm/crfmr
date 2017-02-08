@@ -52,8 +52,6 @@ d <- read.csv("http://www.hafro.is/~einarhj/data/minke.csv",
               stringsAsFactors = FALSE)
 d2 <- read.csv("http://www.hafro.is/~einarhj/data/sau-crfm-country-catches.csv",
                stringsAsFactors = FALSE)
-#d2 <- read.csv("http://data.hafro.is/assmt/2015/cod/summary.csv",
-#               stringsAsFactors = FALSE)
 iceland <- read.csv("http://www.hafro.is/~einarhj/data/iceland.csv",
                stringsAsFactors = FALSE)
 ```
