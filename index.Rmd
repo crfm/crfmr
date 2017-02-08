@@ -33,6 +33,8 @@ There are plenty of good books available on R. What follows in only some basic i
 
 * [Grammar of data manipulation - starting with dplyr](dplyr.html)
 
+* [Combining data manipulation and visualization](more_grammar.html)
+
 * [Grammar of data manipulation - short note on tidyr](tidyr.html)
 
 * [Data drill: Exploring the Sea Around Us data](sau.html)
