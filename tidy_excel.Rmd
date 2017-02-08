@@ -57,7 +57,7 @@ ___
 In this example we have a single Excel files that contains a number of sheets. The data is a full year of landing statistics by boat and trips from one of the regional fleets. The Excel file is on [the web](http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx). It can be downloaded by either clicking on the link or by using the `download.file`-function:
 ```{r, eval = FALSE}
 download.file("http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx",
-              "catch_data2.xlsx")
+              "data-raw/catch_data2.xlsx")
 ```
 
 If one opens the file in Excel on observes that each sheet is of the same format:
@@ -88,7 +88,7 @@ If one thinks about what are the "true" records (rows) in the data it basically 
 
 Lets assign the path and the file name:
 ```{r}
-fil <- "catch_data2.xlsx"  # you need to change the file path
+fil <- "data-raw/catch_data2.xlsx"  # you need to change the file path
 ```
 
 We can obtain the name of the sheets (boats) by using the `excel_sheet` function:
