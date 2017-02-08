@@ -74,7 +74,7 @@ minke <- read.table("minke.csv",
 
 Or, because we know the file is a csv-file we simply do:
 ```{r, eval = FALSE}
-minke <- read.csv("data-raw")
+minke <- read.csv("minke.csv")
 ```
 
 If the data file are in folder called __data__ within the working directory:
@@ -101,22 +101,23 @@ glimpse(minke)
 
 ### Importing data from excel sheets
 
-The `readxl`-package provides support to read in Excel files directly into R
+The `readxl`-package provides support to read in Excel files directly into R (We later introduce you to the `XLConnect` package that has more options). The minke data stored in an excel sheet can be found [here](http://www.hafro.is/~einarhj/data/minke.xlsx). You can either download it onto your computer via the usual point and mouse click or use the `download.file` function: 
 ```{r, message = FALSE}
-# read_excel reads (both xls and xlsx files)
+download.file(url = "http://www.hafro.is/~einarhj/data/minke.xlsx",
+              destfile = "minke.xlsx")
 library(readxl)
-d <- read_excel("data-raw/sau-crfm-country-catches.xlsx")
+d <- read_excel("minke.xlsx")
 glimpse(d)
 ```
 
 The `read_excel` function will by default read in the 1st data-sheet (checkout `args(read_excel)`. To get information on what sheets are in an excel file one can use the `excel_sheets` function:
 ```{r}
-excel_sheets("data-raw/sau-crfm-country-catches.xlsx")
+excel_sheets("minke.xlsx")
 ```
 
-If NAs are represented by something other than blank cells, set the na argument by e.g.:
+If NAs are represented by something other than blank cells, set the na argument by e.g. if -9999 represents missing data then:
 ```{r, eval = FALSE}
-read_excel("data-raw/sau-crfm-country-catches.xlsx", na = "NA")
+read_excel("minke.xlsx", na = "-9999")
 ```
 
 ### Sanity checks

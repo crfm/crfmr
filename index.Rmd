@@ -43,7 +43,10 @@ There are plenty of good books available on R. What follows in only some basic i
 ___
 
 
-* [Reading in data from structured Excel sheets](tidy_excel.html)
+* Reading in data from structured Excel sheets
+    - [Case example 1](tidy_excel.html)
+    - Case example 2 (permission of usage pending)
+    - ...
 
 * The accompanying [Excel file](http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx)
 
@@ -65,6 +68,4 @@ ___
 * Yet another case example
 
 ... and so on
-
-
 
