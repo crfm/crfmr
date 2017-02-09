@@ -12,20 +12,23 @@ knitr::opts_chunk$set(echo = TRUE,
 
 
 ## Preamble
+___
 
-In the document [Importing data into R](importing.html) we introduced the `read_excel` and `excel_sheets` functions that reside in the `readxl`-package. Although the read-function is plain and simple, it has its limitation. The `XLConnect`-package has functions that have finer controls with respect to what is read in. So if you have not already done so install that package using the following command:
+I suspect that those of you that are not storing your data in a database may use and have myriads of Excel sheets that contain the raw data or some aggregate thereof. Even those of you that do store the bulk of the data in a database may store additional data, that "do not fit the database structure" in Excel sheets. The current document provides some ideas (read: R code) on how one can read in consistently formatted data from Excel.
 
-```{r, eval = FALSE}
-install.packages("XLConnect")
-```
+In the document [Importing data into R](importing.html) we introduced the `read_excel` and `excel_sheets` functions that reside in the `readxl`-package. Although the read-function is plain and simple, it has its limitation. The first rows in the Excel sheet may often contain metadata, like boat name, boat registration id, landing harbor name. Or whatever else. And this may then be followed in rows further down below with the actual individual records. Or we may have multiple tables within one sheet.
 
-Remember that once a package is installed on your computer you do not need to reinstall it in every session. Only if you want to get the latest update would you repeat the above command.
+There are two possible approaches:
 
-Now lets load it in addition to the tidyverse-packages:
-```{r}
-library(tidyverse)
-library(XLConnect)
-```
+* Restructure the Excel data sheet so that it is easy to read into R as well as being easy for further analysis
+* Generate R-code that reads in the data and re-formats it so that it is suitable for further analysis.
+
+The former is in many cases undesirable. If only because reconstructing meticulously laid out data in Excel into a computer likable form:
+
+* Requires a lot of work
+* May result in unintentional or unforeseen errors
+
+So, attempting to generate an R-code, which basically leaves the current Excel structure intact may be a desirable root to take (consider that as a strength). The weakness is that if the original structure in the Excel is complicated the R-code to read in the data and tidying it may also be complicated.
 
 ## Getting the example data onto your computer
 
@@ -91,6 +94,18 @@ And then you have to run the `download.file` code above. Again, once you have do
 
 ## Reading a tidy Excel sheet into R
 
+The `XLConnect`-package has functions that allow refinement with respect to what is read in from Excel. If you have not install that package using the following command:
+
+```{r, eval = FALSE}
+install.packages("XLConnect")
+```
+
+Remember that once a package is installed on your computer you do not need to reinstall it in every session. Only if you want to get the latest update would you repeat the above command.
+
+```{r}
+library(tidyverse)
+library(XLConnect)
+```
 We start by creating a "connection" to the Excel workbook using the `loadWorkbook`-function from the `XLConnect`-package: 
 ```{r}
 wb <- loadWorkbook(filename = "data-raw/iccat_codes.xlsx")
@@ -224,8 +239,8 @@ So this sheet has `r nrow(d)` rows of data (each row represents a species) and `
 names(d)
 ```
 
-Notice that for the first trip the landing types are labeled "AG" and "LG". For the second trip we have "AG.1" and "LG.1" and so on, end with the labels "AG.33" and "LG.33" for trip number 34. The reason is that in R one has to have unique column names. Thus if there are multiple column with the same name in a sheet, the `readWorksheet`-function automatically put a sequential number to the the names.
+Notice that for the first trip the landing types are labeled "AG" and "LG". For the second trip we have "AG.1" and "LG.1" and so on, ending with the labels "AG.33" and "LG.33" for trip number 34. The reason is that in R one has to have unique column names. Thus if there are multiple column with the same name in a sheet, the `readWorksheet`-function automatically put a sequential number to the the names.
 
 It is nice to observe that all these columns were interpreted as numeric (coded as "\\\<dbl\\\>" above). This means than no nasty characters other than numbers or even just some "spaces" were in this sheet.
 
-Now although we gotten the data into R, the format of the table is such that any further analysis is very difficult. We deal with that in another document (CREATEALINK).
+Now although we gotten the data into R, the format of the table is such that any further analysis is very difficult. We deal with that in [Case examples: Logbook data](tidyr_case1.html).

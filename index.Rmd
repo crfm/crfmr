@@ -47,18 +47,18 @@ ___
 
 * [Reading in data from structured Excel sheets](importing_excel_data_101.html)
 
-* [Tidying data](tidy_excel.html)
+* Tidying data
+    - [Case example 1](tidyr_case1.html)
+    - Case example 2
+    
 
 * Model fitting in R
-    - Note this going to cover general statistical modeling, not analytical stock assessment models.
+    - A gentle introduction
+    - [Standarization of cpue series](glm.html)
 
 * Estimating total landings - standardized approach
     - Calculation of landing data in a single R script
     - Should aim at showing uncertainties in the estimates
-
-* [Standarization of cpue series](glm.html)
-    - Example of fitting General Linearized model in R using the flying fish cpue data.
-
 
 * [Cleaning data](cleaning.html)
 
