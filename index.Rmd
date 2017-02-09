@@ -35,22 +35,19 @@ There are plenty of good books available on R. What follows in only some basic i
 
 * [Combining data manipulation and visualization](more_grammar.html)
 
-* [Grammar of data manipulation - short note on tidyr](tidyr.html)
+* [Grammar of data manipulation - short note on tidyr](tidyr_introduction.html)
 
 * [Data drill: Exploring the Sea Around Us data](sau.html)
 
 * ....
 
-### Potential case examples
+### Case examples
 ___
 
 
-* Reading in data from structured Excel sheets
-    - [Case example 1](tidy_excel.html)
-    - Case example 2 (permission of usage pending)
-    - ...
+* [Reading in data from structured Excel sheets](importing_excel_data_101.html)
 
-* The accompanying [Excel file](http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx)
+* [Tidying data](tidy_excel.html)
 
 * Model fitting in R
     - Note this going to cover general statistical modeling, not analytical stock assessment models.

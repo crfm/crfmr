@@ -1,0 +1,88 @@
+---
+title: "Tidy data"
+output: html_document
+---
+
+## Preamble
+
+Data are often not in tidy format ....
+
+Note that when we here refer to tidy data it is not the same thing as "data cleaning". The latter deals specifically with correcting typos.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+## Gather
+
+Datasets are often arranged in a wide format, mainly because it is more readable for humans. Take e.g. this dataset representing catches by gear by year:
+```{r, echo = FALSE}
+catch <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
+                 year = rep(c(2001, 2002), 3),
+                 catch = c(500, 750, 400, 600, 20, 20)) %>% 
+  spread(year, catch)
+```
+
+```{r}
+catch
+```
+
+Here the column names represent a variable name (year) and it contains the actual value (2001 and 2002). And in each row we have observation of catches in two rows not one.
+
+To tidy dataset such as these we use the `gather`-function:
+
+```{r}
+catch %>% 
+  gather(key = year, value = catch, `2001`:`2002`)
+```
+
+Here we selected the year columns and give it the (key) variable name "year" and then the actual values are given the variable name "catch".
+
+Note that we could also have used a negative value for the selection of column:
+```{r, eval = FALSE}
+# not run
+catch %>% 
+  gather(key = year, value = catch, -gear)
+```
+
+In the above we basically select all columns (to gather) except the species column.
+
+## Spread
+
+`spread` is the exact opposite of `gather`, i.e. takes the data from a long format to a wide format.
+
+```{r, echo = FALSE}
+catch <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
+                 year = rep(c(2001, 2002), 3),
+                 value = c(500, 750, 400, 600, 20, 20)) %>% 
+  mutate(type = "catch")
+effort <- 
+  data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
+                 year = rep(c(2001, 2002), 3),
+                 value = c(100, 150, 200, 300, 50, 25)) %>% 
+  mutate(type = "effort")
+df <- 
+  bind_rows(catch, effort) %>% 
+  select(gear, year, type, value) %>% 
+  arrange(gear, year, type)
+```
+
+```{r}
+df
+```
+
+In the example above an observation is a gear in a year, but each observation is spread across two rows, where the numerical value have different meanings. We can spread these values across the two types as follows:
+```{r}
+df %>% 
+  spread(type, value)
+```
+
+## Separate
+
+... to be added
+

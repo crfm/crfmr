@@ -1,0 +1,231 @@
+---
+title: "Importing data from Excel"
+author: "Einar Hjörleifsson"
+date: "8 February 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE)
+```
+
+
+## Preamble
+
+In the document [Importing data into R](importing.html) we introduced the `read_excel` and `excel_sheets` functions that reside in the `readxl`-package. Although the read-function is plain and simple, it has its limitation. The `XLConnect`-package has functions that have finer controls with respect to what is read in. So if you have not already done so install that package using the following command:
+
+```{r, eval = FALSE}
+install.packages("XLConnect")
+```
+
+Remember that once a package is installed on your computer you do not need to reinstall it in every session. Only if you want to get the latest update would you repeat the above command.
+
+Now lets load it in addition to the tidyverse-packages:
+```{r}
+library(tidyverse)
+library(XLConnect)
+```
+
+## Getting the example data onto your computer
+
+For this session we also need to access some example excel workbook. So lets first download it:
+```{r, eval = FALSE}
+download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",
+              destfile = "data-raw/iccat_codes.xlsx")
+```
+
+Here I specified in the function argument __destfile__ "data-raw/iccat_codes.xlsx". The slash ("/") means that what comes before is the name of a directory (read: folder) in my __current R-working directory__. Here the name of that directory is "data-raw". This directory has to exist, otherwise one get an error. E.g. if I had tried something like:
+```{r, eval = FALSE}
+download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",
+              destfile = "garbage/iccat_codes.xlsx")
+```
+
+I would have gotten something like this in the console:
+
+```
+downloaded 0 bytes
+Error in download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",  : 
+  cannot download all files
+In addition: Warning messages:
+1: In download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",  :
+  URL http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx: cannot open destfile 'garbage/iccat_codes.xlsx', reason 'No such file or directory'
+2: In download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",  :
+  downloaded length 0 != reported length 37391
+> download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",
++               destfile = "garbage/iccat_codes.xlsx")
+downloaded 0 bytes
+Error in download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",  : 
+  cannot download all files
+In addition: Warning messages:
+1: In download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",  :
+  URL http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx: cannot open destfile 'garbage/iccat_codes.xlsx', reason 'No such file or directory'
+2: In download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",  :
+  downloaded length 0 != reported length 37391
+```
+
+The above is a classical R warning message, obtuse. In this case the key text is:
+```
+cannot open destfile 'garbage/iccat_codes.xlsx', reason 'No such file or directory'
+```
+So the reason for the error message is that I do not have the directory named "garbage" in my __current R-working directory__.
+
+If you do not already have the __data-raw__ directory, you can create it from within R by doing:
+
+```{r, eval = FALSE}
+dir.create("data-raw")
+```
+
+What has happened is that a new directory has been generated on your computer hard drive (check out for yourself). And if it already existed, don't worry nothing has changed on your hard drive, you would only get a R-warning like this:
+
+```
+Warning message:
+In dir.create("data-raw") : 'data-raw' already exists
+```
+
+Meaning that the existing directory is still intact - nothing has changed.
+
+One could of course also have downloaded the [iccat_codes.xlsx](http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx) with the usual point-and-mouse-click method. But by using an R-script one makes the whole process fully reproducible (what is done is written in the code itself).
+
+And then you have to run the `download.file` code above. Again, once you have downloaded the file onto your computer you do not need to repeat the above command.
+
+## Reading a tidy Excel sheet into R
+
+We start by creating a "connection" to the Excel workbook using the `loadWorkbook`-function from the `XLConnect`-package: 
+```{r}
+wb <- loadWorkbook(filename = "data-raw/iccat_codes.xlsx")
+```
+
+We can get the names of the sheets that are in the workbook by:  
+```{r}
+getSheets(wb)
+```
+
+So we have 2 sheets, one named "reporting_flag", the other "codes".
+
+To get a glimpse of the first sheet we could try to do:
+```{r}
+readWorksheet(object = wb,
+              sheet = "reporting_flag") %>% 
+  glimpse()
+```
+
+Here things just "look" OK. Take note that we could also have used a numeric value for the sheet-argument (in this case 1, the sheet being the first position in the workbook).
+
+But lets try the second sheet (named "codes") using the same approach:
+```{r}
+readWorksheet(object = wb,
+              sheet = "codes") %>% 
+  glimpse()
+```
+
+If you open the Excel workbook iccat_codes.xlsx in its native environment and look at the individual sheets you may gather for yourself the reason why. In short, the "reporting_flag"-sheet is tidy while the "code"-sheet has multiple tables.
+
+## Reading in specific regions from an Excel sheet
+
+Here we are going to need specify additional arguments within the `readWorksheet`-function. To see what arguments a function takes one can always do:
+
+```{r}
+args(readWorksheet)
+```
+
+We see that we have a lot of options that we can specify. 
+
+Notice that in the "code"-worksheet we have a table starting in row 2 going from column A to column F. This is identical to the table in the "reporting_flag"-sheet. Because there are other tables in the "code"-worksheet we would need to specify the starting row and the end column in the `readWorksheet`-function:
+
+```{r}
+country <- 
+  readWorksheet(wb, "codes",
+                startRow = 2,
+                endCol = 6)
+glimpse(country)
+```
+
+For the species code table, we would need to specify both the starting column (H) and the end column (N):
+```{r}
+species <- 
+  readWorksheet(wb, "codes",
+                startRow = 2,
+                startCol = 8,
+                endCol = 14)
+glimpse(species)
+```
+
+The next table is the gear table. Because there is a table below (Quadrants) one would also need to specify the end row:
+```{r}
+gear <-
+  readWorksheet(wb, "codes",
+                startRow = 2,
+                endRow = 53,
+                startCol = 18,
+                endCol = 23)
+glimpse(gear)
+```
+
+Bottom line is that one can specify which part of a worksheet is read in by using the "startRow", "endRow", "startCol" and "endCol" arguments. There are also plenty of other arguments that one can specify in the `readWorksheet`-function. For further information of what they do check out the help page by typing "?readWorksheet" in the console.
+
+## Reading in not so nicely structured worksheet
+
+In this example we have a workbook that contains a number of sheets. The data is a full year of landing statistics by boats, trips and species. Each boat is stored in a separate sheet. The Excel file is called [logbook.xlsx](http://www.hafro.is/~einarhj/crfmr/data-raw/logbook.xlsx). It can be downloaded by either clicking on the link above or what is more reproducible by using the `download.file`-function:
+```{r, eval = FALSE}
+download.file("http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx",
+              "data-raw/logbook.xlsx")
+```
+
+If one opens the file in Excel one observes that each sheet is of the same format:
+
+* One sheet per boat, the sheet names being an abbreviation of the boat name.
+* Within each sheet catch data are reported by trip and species
+* Metadata, including boat name, boat registration number and landing place are stored within the top 6 rows.
+* In each sheet the detailed column header is in row 9
+* The trip number is however reported in row 7
+* The first three columns contain a row identifier followed by English and Latin species name
+* The first trip is recorded in the 4th and 5th column and so on. The number of recorded trips is variable among boats (sheets).
+* The pair of two columns within a trip represent the catch of two landing categories.
+
+A screenshot of one sheet is as follows:
+![](img/case_example_1b.png)
+
+Lets load the wb into R and get some information on the sheet (boat) names:
+```{r}
+wb <- loadWorkbook("data-raw/logbook.xlsx")
+sheets <- getSheets(wb)
+sheets
+```
+
+So here we have `r length(sheets)` number of boats, the first being named `r sheets[1]`, the second `r sheets[2]` and so on.
+
+In the above we see that the name of the first sheet (boat) is "Georgieann". We can read in the data using the `read_excel` function. We skip the first 8 rows since the data column names actually start in row 9. Hence:
+```{r}
+d <- readWorksheet(wb, "Georgieann",
+                   startRow = 9) %>% 
+  tbl_df()
+```
+or alternatively:
+```{r, eval = FALSE}
+d <- readWorksheet(wb, 1,
+                   startRow = 9) %>% 
+  tbl_df()
+```
+or alternatively:
+```{r, eval = FALSE}
+d <- readWorksheet(wb, sheets[1],
+                   startRow = 9) %>% 
+  tbl_df()
+```
+
+Lest see what we have got:
+```{r}
+glimpse(d)
+```
+
+So this sheet has `r nrow(d)` rows of data (each row represents a species) and `r ncol(d)` columns. We note that the first three columns are as expected some kind of an id, species name and Latin name. Following that are 34 pairs of column names "AG" and "LG" and then the last column is labelled Total (presumably row total). We can get an overview of the names by:
+```{r}
+names(d)
+```
+
+Notice that for the first trip the landing types are labeled "AG" and "LG". For the second trip we have "AG.1" and "LG.1" and so on, end with the labels "AG.33" and "LG.33" for trip number 34. The reason is that in R one has to have unique column names. Thus if there are multiple column with the same name in a sheet, the `readWorksheet`-function automatically put a sequential number to the the names.
+
+It is nice to observe that all these columns were interpreted as numeric (coded as "\\\<dbl\\\>" above). This means than no nasty characters other than numbers or even just some "spaces" were in this sheet.
+
+Now although we gotten the data into R, the format of the table is such that any further analysis is very difficult. We deal with that in another document (CREATEALINK).
