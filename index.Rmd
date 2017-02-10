@@ -37,9 +37,9 @@ There are plenty of good books available on R. What follows in only some basic i
 
 * [Grammar of data manipulation - short note on tidyr](tidyr_introduction.html)
 
-* [Data drill: Exploring the Sea Around Us data](sau.html)
+* ...
 
-* ....
+* ...
 
 ### Case examples
 ___
@@ -62,9 +62,7 @@ ___
 
 * [Cleaning data](cleaning.html)
 
-* Another case example
+* ...
 
-* Yet another case example
-
-... and so on
+* ...
 

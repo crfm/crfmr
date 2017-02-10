@@ -34,13 +34,15 @@ So, attempting to generate an R-code, which basically leaves the current Excel s
 For this session we also need to access some example excel workbook. So lets first download it:
 ```{r, eval = FALSE}
 download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",
-              destfile = "data-raw/iccat_codes.xlsx")
+              destfile = "data-raw/iccat_codes.xlsx",
+              mode = "wb")
 ```
 
 Here I specified in the function argument __destfile__ "data-raw/iccat_codes.xlsx". The slash ("/") means that what comes before is the name of a directory (read: folder) in my __current R-working directory__. Here the name of that directory is "data-raw". This directory has to exist, otherwise one get an error. E.g. if I had tried something like:
 ```{r, eval = FALSE}
 download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx",
-              destfile = "garbage/iccat_codes.xlsx")
+              destfile = "garbage/iccat_codes.xlsx",
+              mode = "wb")
 ```
 
 I would have gotten something like this in the console:
@@ -182,8 +184,9 @@ Bottom line is that one can specify which part of a worksheet is read in by usin
 
 In this example we have a workbook that contains a number of sheets. The data is a full year of landing statistics by boats, trips and species. Each boat is stored in a separate sheet. The Excel file is called [logbook.xlsx](http://www.hafro.is/~einarhj/crfmr/data-raw/logbook.xlsx). It can be downloaded by either clicking on the link above or what is more reproducible by using the `download.file`-function:
 ```{r, eval = FALSE}
-download.file("http://www.hafro.is/~einarhj/crfmr/data-raw/catch_data2.xlsx",
-              "data-raw/logbook.xlsx")
+download.file("http://www.hafro.is/~einarhj/crfmr/data-raw/logbook.xlsx",
+              "data-raw/logbook.xlsx",
+              mode = "wb")
 ```
 
 If one opens the file in Excel one observes that each sheet is of the same format:

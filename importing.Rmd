@@ -77,9 +77,9 @@ Or, because we know the file is a csv-file we simply do:
 minke <- read.csv("minke.csv")
 ```
 
-If the data file are in folder called __data__ within the working directory:
+If the data file are in folder called __data-raw__ within the working directory:
 ```{r, eval = FALSE}
-minke <- read.csv('data/minke.csv')
+minke <- read.csv('data-raw/minke.csv')
 ```
 
 If it is somewhere on the computer one can use absolute positioning. E.g if it resides in a root folder called __all_data__ one would use the following:
@@ -101,10 +101,11 @@ glimpse(minke)
 
 ### Importing data from excel sheets
 
-The `readxl`-package provides support to read in Excel files directly into R (We later introduce you to the `XLConnect` package that has more options). The minke data stored in an excel sheet can be found [here](http://www.hafro.is/~einarhj/data/minke.xlsx). You can either download it onto your computer via the usual point and mouse click or use the `download.file` function: 
+The `readxl`-package provides support to read in Excel files directly into R (We later introduce you to the `XLConnect` package that has more options). The minke data stored in an excel sheet called [minke.xlsx](http://www.hafro.is/~einarhj/data/minke.xlsx). You can either download it onto your computer via the usual point and mouse click or use the `download.file` function: 
 ```{r, message = FALSE}
 download.file(url = "http://www.hafro.is/~einarhj/data/minke.xlsx",
-              destfile = "minke.xlsx")
+              destfile = "minke.xlsx",
+              mode = "wb")
 library(readxl)
 d <- read_excel("minke.xlsx")
 glimpse(d)
