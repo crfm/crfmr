@@ -99,6 +99,14 @@ minke <- read.csv("http://www.hafro.is/~einarhj/data/minke.csv")
 glimpse(minke)
 ```
 
+Take note that the non-numerial (character) data are imported as factors. Although desirable in some cases (e.g. when fitting a model) for most purposes we want them in just as character strings. Hence when reading in things we often put the stringsAsFactors argument to FALSE:
+
+```{r}
+minke <- read.csv("http://www.hafro.is/~einarhj/data/minke.csv",
+                  stringsAsFactors = FALSE)
+glimpse(minke)
+```
+
 ### Importing data from excel sheets
 
 The `readxl`-package provides support to read in Excel files directly into R (We later introduce you to the `XLConnect` package that has more options). The minke data stored in an excel sheet called [minke.xlsx](http://www.hafro.is/~einarhj/data/minke.xlsx). You can either download it onto your computer via the usual point and mouse click or use the `download.file` function: 
@@ -123,7 +131,7 @@ read_excel("minke.xlsx", na = "-9999")
 
 ### Sanity checks
 
-After the data has been imported one frequently checks the data to see what was exported is as expected. Some common functions are: 
+After the data has been imported one frequently checks the data to see what was imported is as expected. Some common functions are: 
 ```
 head(d)     # shows the top 6 lines of d
 tail(d)     # shows the last 6 lines of d
@@ -133,7 +141,6 @@ summary(d)  # quick summary statistics for the columns of d
 str(d)      # show the structure of the data, e.g. variable types
 glimpse(d)  # dplyr equivalent of str that works on data frames
 ```
-
 ### Importing data from databases
 
 Databases are commonly used to store (large amounts of) data and numerous software vendors provide database solutions, both general and specific. Similarly numerous packages exist to interact with databases in R. Notably `DBI`, `RODBC` and `dplyr`. Typically in an R session the user queries the database for the data needed for a particular analysis and loads it into memory. Larger datasets, that don't fit into memory may however need to be processed prior to importing it into R.

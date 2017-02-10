@@ -21,63 +21,35 @@ Nice resources:
 
 ### Needed libraries for this tutorial:
 ```{r, message = FALSE, warning = FALSE, results='hide'}
-library(ggplot2)
+library(tidyverse)  # This loads among other things the ggplot2-package
 library(ggmap)
 library(gridExtra)
 library(maps)
 library(mapdata)
 ```
 
-Note if you have not installed and of the above packages, e.g. you get an error message when running:
-```
-library(ggmap)
-```
-saying:
-```
-Error in library(ggmap) : there is no package called ‘ggmap’
-```
-then you need to install the package by running:
-```{r, eval = FALSE}
-install.packages("ggmap")
-```
-Once done you of course need to run again:
-```{r, eval = FALSE}
-library(ggmap)
-```
-
+Note if you have not installed these package, check the [Intalling](installing.hml)-documentation.
 
 ### Getting example data into R
+
+For this tutorial we are going to use the following data (information on them found [here](http://www.hafro.is/~einarhj/data))
+
 ```{r}
-d <- read.csv("http://www.hafro.is/~einarhj/data/minke.csv",
-              stringsAsFactors = FALSE)
-d2 <- read.csv("http://www.hafro.is/~einarhj/data/sau-crfm-country-catches.csv",
-               stringsAsFactors = FALSE)
+minke <- read.csv("http://www.hafro.is/~einarhj/data/minke.csv",
+                  stringsAsFactors = FALSE)
+sau <- read.csv("http://www.hafro.is/~einarhj/data/sau-crfm-country-catches.csv",
+                stringsAsFactors = FALSE)
 iceland <- read.csv("http://www.hafro.is/~einarhj/data/iceland.csv",
-               stringsAsFactors = FALSE)
+                    stringsAsFactors = FALSE)
 ```
 
-* __Get the data into your R-environment__
-
-__The minke data__:
+Just get a quick overview of the data we use the __glimpse__-function:
 
 ```{r}
-str(d)
+glimpse(minke)
+glimpse(sau)
+glimpse(iceland)
 ```
-
-__Catch data__:
-
-```{r}
-str(d2)
-```
-
-### Links
-
-* The ggplot2 site: http://docs.ggplot2.org/current
-* The ggplot2 book in the making: https://github.com/hadley/ggplot2-book
-    - A rendered version of the book: http://www.hafro.is/~einarhj/education/ggplot2
-        - needs to be updates
-* R graphics cookbook: http://www.cookbook-r.com/Graphs/
-
 
 # ggplot: Key components
 
@@ -85,62 +57,66 @@ ggplot has __three__ key components:
 
 1.  __data__,
 
-2. A set of __aesthetic mappings__ [aes] between variables in the data and 
-   visual properties, and 
+2. A set of __aesthetic mappings__ [aes] for the variables in the data, and 
 
 3. At least one layer which describes how to render each observation. Layers
    are usually created with a __geom__ function.
 
 `r columns(1)`
 ```{r}
-ggplot(d, aes(x = age, y = length)) + 
+ggplot(data = minke, aes(x = age, y = length)) + 
   geom_point()
 ```
 
-Different syntax, equivalent outcome:
+Here we have basically just created a point-plot where __age__ is plotted ("mapped") on the x-axis and __length__ on the y-axis. One can use different syntax resulting in the same outcome:
 
 ```{r, eval = FALSE}
-ggplot(d, aes(x = age, y = length)) + geom_point()
-ggplot(d, aes(age, length))         + geom_point()
-ggplot()                            + geom_point(data = d, aes(age, length))
-ggplot(data = d)                    + geom_point(aes(x = age, y = length))
-ggplot(d)                           + geom_point(aes(age, length))
-d %>% ggplot()                      + geom_point(aes(age, length))
+ggplot(minke, aes(x = age, y = length)) + geom_point()
+ggplot(minke, aes(age, length))         + geom_point()
+ggplot()                                + geom_point(data = minke, aes(age, length))
+ggplot(data = minke)                    + geom_point(aes(x = age, y = length))
+ggplot(minke)                           + geom_point(aes(age, length))
+minke %>% ggplot()                      + geom_point(aes(age, length))
 ```
 
-Can be stored as an object for later use:
-
+One has quite a set of options were one can control colour, size, shape and alpha (the transparency of the points):
 ```{r}
-p <- ggplot(d, aes(age, length)) + geom_point()
+ggplot(minke) + 
+  geom_point(aes(age, length), colour = "red", size = 2, shape = 3, alpha = 0.4)
 ```
 
-The class:
+One can also stored the plot in an object for later use:
 ```{r}
-class(p)
+p <- ggplot(minke) + geom_point(aes(age, length))
 ```
-The structure (a bit of latin - not run here):
-```{r, eval = FALSE}
-str(p)
-```
+The above is useful if one wants to build a plot step-by-step or arrange many plots together for display (see below).
 
-# aesthetic: colour
+# Using the value of varible to control aesthetics
+
+In the above cases the colour, size, shape and alpha levels are fixed values set outside the `aes`-function. We can however use the value of a variable in the dataset to control the visualization. Below is just a list of some things that can be set:
+
+### aesthetic: colour
 `r columns(2)`
+
+One can add more aesthetics to the plot, e.g. if one wants to distinguish between __sex__ or the __area__ where the whale was caught:
 ```{r}
-p <- ggplot(d)
+p <- ggplot(minke)
 p + geom_point(aes(age, length, colour = sex))
 p + geom_point(aes(age, length, colour = area))
 ```
 
-Manual control of colours:
+Colours can be manually specified using `scale_colour_manual`:
 ```{r}
-p <- ggplot(d)
+p <- ggplot(minke)
 p + geom_point(aes(age, length, colour = sex)) +
   scale_colour_manual(values = c("orange","brown"))
 p + geom_point(aes(age, length, colour = area)) +
-  scale_colour_manual(values = c("orange","brown"))
+  scale_colour_manual(values = c("green","red"))
 ```
 
-# aesthetic: shape
+In the above case __sex__ and __area__ had only two values, hence only two colours were specified.
+
+### aesthetic: shape
 `r columns(1)`
 ```{r}
 p + geom_point(aes(age, length, shape = sex))
@@ -162,20 +138,8 @@ p + geom_point(aes(age, length, shape = maturity))
 </div>
 </div>
 
+### aesthetic: size
 
-# Digression
-
-Plot side-by-side
-
-```{r, fig.width = 10}
-p1 <- p + geom_point(aes(age, length), colour = "blue")
-p2 <- p + geom_point(aes(age, length, shape = sex))
-grid.arrange(p1, p2, ncol = 2)
-```
-
-
-
-# aesthetic: size
 `r columns(1)`
 ```{r}
 p + geom_point(aes(age, length, size = stomach.volume))
@@ -190,10 +154,10 @@ p + geom_point(aes(age, length, size = stomach.volume), alpha = 0.3, col = "red"
 
 # facetting
 
-Display same graph by subsets of the data:
+A plot can be subsetted by using the `face_wrap`-function. Here we e.g. split the plot up into the two survey areas (North and South):
 `r columns(1)`
 ```{r}
-ggplot(d) + 
+ggplot(minke) + 
   geom_point(aes(age, length, colour = sex)) + 
   facet_wrap(~ area)
 ```
@@ -205,7 +169,7 @@ ggplot(d) +
 Create a code that results in this plot:
 `r columns(1)`
 ```{r, echo = FALSE}
-ggplot(d) +
+ggplot(minke) +
   geom_point(aes(age, length, colour = area)) + 
   facet_wrap(~ sex)
 ```
@@ -213,35 +177,100 @@ ggplot(d) +
 </div>
 </div>
 
+# Plotting plots side-by-side
+
+If one wanted two different plots side-by-side one needs to store each plot as and object and then use the `grid.arrange`-function. E.g.:
+
+```{r, fig.width = 10}
+p1 <- p + geom_point(aes(age, length), colour = "blue")
+p2 <- p + geom_point(aes(age, length, shape = sex))
+grid.arrange(p1, p2, ncol = 2)
+```
 
 # layers
 
-## layer: add smoother to a plot
+In the above cases we have only one type of a layer, the point layer. ggplot2 has of course myriads of layers. Below are some examples that give a brief overview of some other layers.
+
+### layer: line
 
 `r columns(2)`
 ```{r}
-p <- ggplot(d, aes(age, length))
-p + geom_point() + geom_smooth()
-p + geom_point() + geom_smooth(span = 0.1)
+ggplot(sau, aes(year, total)) + geom_line()
 ```
 
-Specific models:
+You may have noticed that by default the plot area shown cover only the range of the data. In the above case one may have wanted to have the y-plot have a starting point at zero. Here we would need to use the `expand_limits`-function:
+```{r}
+ggplot(sau, aes(year, total)) + geom_line() + expand_limits(y = 0)
+```
+
+## layer: bar charts
+
+We can create histograms for discrete data using the `geom_bar`-function:
 `r columns(1)`
 ```{r}
-p + geom_point() + geom_smooth(method = "lm")
+ggplot(minke, aes(maturity)) + geom_bar()
+```
+
+<div class="panel panel-warning">
+<div class="panel-heading">Exercise</div>
+<div class="panel-body">
+
+Modify the above code to generate the following:
+
+```{r, echo = FALSE}
+ggplot(minke, aes(maturity)) + geom_bar() + facet_wrap(~ area, nrow = 2)
+```
+</div>
+</div>
+
+## layer: histograms
+
+We can create histograms for discrete data using the `geom_bar`-function. That function has also an argument for controlling the binwidth:
+
+`r columns(2)`
+```{r}
+p <- ggplot(minke, aes(length))
+p + geom_histogram()
+p + geom_histogram(binwidth = 50)
+```
+
+One may want to get a histogram show the size distribution of e.g. the different sexes:
+`r columns(2)`
+```{r}
+p + geom_histogram(aes(fill = sex))
+```
+
+It is quite hard to get a visualization of the length distribution of the Females here, so it may be better to split the plot into different panels:
+`r columns(1)`
+```{r}
+p + geom_histogram(aes(fill = sex)) + facet_wrap(~ sex, ncol = 1)
+```
+
+## layer: frequency polygons
+
+Instead of a histogram it may also be better to show things as frequency lines:
+
+`r columns(2)`
+```{r}
+p + geom_freqpoly()
+p + geom_freqpoly(aes(colour = sex), binwidth = 50)
 ```
 
 ## layer: points as jitters
 
-Add a little random noise to the data to avoid overplotting:
+Add a little random noise to the data to avoid over-plotting can be done using the `geom_jitter`-function:
+
 `r columns(2)`
 ```{r}
-p <- ggplot(d, aes(sex, length))
+p <- ggplot(minke, aes(sex, length))
 p + geom_point()
 p + geom_jitter()
 ```
 
 ## layer: summarise via boxplots or violins
+
+Instead of a jitter plot, a more condensed way to show the distribution of the data is to use box- or violinplots:
+
 `r columns(2)`
 ```{r}
 p + geom_boxplot()
@@ -250,9 +279,11 @@ p + geom_violin()
 
 ## layer: overlay data and summary layers
 
+In ggplot one can have more than one layer. E.g. in if we generate a summary distribution plot one may also want the get a "glimpse" at the raw data:
+
 `r columns(1)`
 ```{r}
-p + geom_boxplot() + geom_jitter()
+p + geom_boxplot() + geom_jitter(colour = "red", alpha = 0.3)
 ```
 
 <div class="panel panel-warning">
@@ -264,88 +295,48 @@ Create the following 3 layer plot:
 p + geom_violin() + geom_boxplot() + geom_jitter()
 ```
 
-
 </div>
 </div>
 
+### layer: add smoother to a plot
 
-## layer: frequency polygons
+Another example where we add layers could be adding a smoother to a point-plot:
 
 `r columns(2)`
 ```{r}
-p <- ggplot(d, aes(length))
-p + geom_freqpoly()
-p + geom_freqpoly(aes(colour = sex))
+p <- ggplot(minke, aes(age, length))
+p + geom_point() + geom_smooth()
+p + geom_point() + geom_smooth(span = 0.1)
 ```
 
-## layer: histograms
-
-More details distribution than boxplots do, but more space:
-`r columns(2)`
-```{r}
-p + geom_histogram()
-p + geom_histogram(aes(fill = sex))
-```
-
-Better way for histograms:
+We even have some specific models we could try, here a linear model:
 `r columns(1)`
 ```{r}
-p + geom_histogram(aes(fill = sex)) + facet_wrap(~ sex, ncol = 1)
-```
-
-Controlling binwidths:
-```{r}
-p + geom_histogram(binwidth = 50)
-```
-
-## layer: bar charts
-
-Histograms for discrete data:
-`r columns(1)`
-```{r}
-ggplot(d, aes(maturity)) + geom_bar()
-```
-
-<div class="panel panel-warning">
-<div class="panel-heading">Exercise</div>
-<div class="panel-body">
-
-Modify the above code to generate the following:
-
-```{r, echo = FALSE}
-ggplot(d, aes(maturity)) + geom_bar() + facet_wrap(~ area, nrow = 2)
-```
-</div>
-</div>
-
-
-
-
-## layer: line
-`r columns(2)`
-```{r}
-ggplot(d2, aes(year, total)) + geom_line()
-ggplot(d2, aes(year, total)) + geom_line() + expand_limits(y = 0)
+p + geom_point() + geom_smooth(method = "lm")
 ```
 
 # Some controls
 
-## labels
+If we want to put a plot into a report we may not like the default that is given but to refine the plot further. There are a number of functions in ggplot2 that allow us to take full control on the final outlook.
 
+### labels
+
+So far, the labels in the plot have been just the variable names in the dataframe. To specify the labels one can use the `labs`-function:
 `r columns(2)`
 ```{r}
-p <- ggplot(d, aes(age, length, colour = sex)) + geom_point()
+p <- ggplot(minke, aes(age, length, colour = sex)) + geom_point()
 p
 p + labs(x = "Age [year]", y = "Length [cm]", 
-         colour = "Sex", title = "My minke plot")
+         colour = "Sex", title = "My minke plot",
+         subtitle = "Based on survey data from 2003-2007")
 ```
 
 ## breaks
 
-Controlling  which values appear as tick marks
+Controlling  which values appear as tick marks one can use:
 `r columns(3)`
 ```{r}
-p <- ggplot(d, aes(age, length)) + geom_point() + labs(x = NULL, y = NULL)
+p <- ggplot(minke, aes(age, length)) + geom_point() + labs(x = NULL, y = NULL)
 p
 p +
   scale_x_continuous(breaks = c(5, 10, 15, 20, 25, 30, 35, 40, 45))
@@ -357,33 +348,30 @@ p +
 <div class="panel panel-warning">
 <div class="panel-heading">Exercise</div>
 <div class="panel-body">
-Create code that mimics the following breaks:
+Create code that mimics the following plot:
 `r columns(2)`
 ```{r, echo = FALSE}
-ggplot(d2, aes(year, total)) + 
+ggplot(sau, aes(year, total)) + 
   geom_line() + 
   expand_limits(y = 0) +
   scale_x_continuous(breaks = seq(1950, 2020, by = 10)) +
   scale_y_continuous(breaks = seq(0, 300, by = 25))
 ```
-
-
 </div>
 </div>
-
-
 
 ## limits
 
+If you only want "zoom into" a data area one can use `xlim` or `ylim`:
 `r columns(3)`
 ```{r}
-p <- ggplot(d, aes(maturity, length))
+p <- ggplot(minke, aes(maturity, length))
 p + geom_jitter()
 p + geom_jitter() + ylim(600, 800)
 p + geom_jitter() + ylim(NA, 800) # setting only one limit
 ```
 
-For descrete variables:
+For discrete variables:
 `r columns(1)`
 ```{r}
 p + geom_jitter() + ylim(600,800) + xlim("immature","mature")
@@ -398,7 +386,7 @@ p + geom_boxplot()
 p + geom_boxplot() + ylim(600, 800)
 ```
 
-Remedy:
+This is because when you specify the `ylim` the data outside that range are filtered out completely from the plot-data. The remedy is to wrap the function inside the `coord_cartesian`-function:
 `r columns(1)`
 ```{r}
 p + geom_boxplot() + coord_cartesian(ylim = c(600, 800))
@@ -406,10 +394,7 @@ p + geom_boxplot() + coord_cartesian(ylim = c(600, 800))
 
 # A little gis
 
-```{r}
-str(iceland)
-```
-
+The object __island__ contains the Latitude and Longitude of the Icelandic shoreline. We could try to do a point or a line plot:
 
 `r columns(2)`
 ```{r}
@@ -418,10 +403,13 @@ p + geom_point()
 p + geom_line()
 ```
 
+The point plot shows something that is close to recognizable. However in the line plot data are rearranged such the line is drawn from the smallest x-value, to the next-smallest x-value and so on. The __island__ object actually has the data arranged in a specific order. If one want to retain that order one needs to use the `geom_path`-function. In addition, because the data are in coordinates we want to set the correct aspect ratio between the x- and the y-axis, hence here we also need to use the `coord_map`-function
 ```{r}
 p + geom_path()
 p + geom_path() + coord_map()
 ```
+
+So, gis-mapping is nothing more than having data in a structured order and one connect the dots with a line in addition to specifying the map projection.
 
 ## On maps
 
@@ -438,7 +426,7 @@ ggplot(m) +
   coord_quickmap()
 ```
 
-The reslution of "world" is not very high as can be seen if only want Barbados:
+The resolution of "world" is not very high as can be seen if only want Barbados:
 ```{r}
 m <- map_data("world", region = "Barbados")
 ggplot(m) +
@@ -480,17 +468,17 @@ m
 ## gis: Add layers
 `r columns(2)`
 ```{r}
-m + geom_point(data = d, aes(lon, lat))
-m + geom_point(data = d, aes(lon, lat, colour = area))
+m + geom_point(data = minke, aes(lon, lat))
+m + geom_point(data = minke, aes(lon, lat, colour = area))
 ```
 
 ```{r}
-m + geom_point(data = d, aes(lon, lat, colour = sex))
-m + geom_point(data = d, aes(lon, lat, colour = year))
-m + geom_point(data = d, aes(lon, lat, colour = factor(year)))
-m + geom_point(data = d, aes(lon, lat, size = length), alpha = 0.2)
+m + geom_point(data = minke, aes(lon, lat, colour = sex))
+m + geom_point(data = minke, aes(lon, lat, colour = year))
+m + geom_point(data = minke, aes(lon, lat, colour = factor(year)))
+m + geom_point(data = minke, aes(lon, lat, size = length), alpha = 0.2)
 # possible remedy of the above plot - is beyound the basic introduction
-m + geom_point(data = d, aes(lon, lat, colour = length)) +
+m + geom_point(data = minke, aes(lon, lat, colour = length)) +
   scale_colour_gradient(low = "yellow", high = "red")
 ```
 
@@ -507,11 +495,11 @@ m2
 <div class="panel-heading">Exercise</div>
 <div class="panel-body">
 
-Repeat previous plots where we use "iceland" or do new ones, but using the google base as a background. E.g.:
+Repeat previous plots where we use "iceland" or do new ones, but using the Google base as a background. E.g.:
 
 `r columns(1, 1, 1.2)`
 ```{r, echo = FALSE}
-m2 + geom_point(data = d, aes(lon, lat, colour = maturity))
+m2 + geom_point(data = minke, aes(lon, lat, colour = maturity))
 ```
 
 
