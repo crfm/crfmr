@@ -56,9 +56,7 @@ ___
     - A gentle introduction
     - [Standarization of cpue series](glm.html)
 
-* Estimating total landings - standardized approach
-    - Calculation of landing data in a single R script
-    - Should aim at showing uncertainties in the estimates
+* [Estimating catch and effort](catch_and_effort.html)
 
 * [Cleaning data](cleaning.html)
 
