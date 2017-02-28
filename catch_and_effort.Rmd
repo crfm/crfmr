@@ -1,0 +1,166 @@
+---
+title: "Estimation of catch and effort"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(stringr)
+library(knitr)
+```
+
+# Preamble
+
+The following case example is based on data used to illustrate the operation of the [ARTFISH software](http://www.fao.org/fishery/topic/16081/en). The data has been imported into an [Excel sheet](
+
+
+# Tidy data
+
+```{r}
+f <- "data-raw/artfish/catch_sample.xlsx"
+frame.survey <- 
+  read_excel(f, sheet = "frame_survey") %>% 
+  gather(key = gear, value = total.boat, -c(strata, site))
+active.days <- 
+  read_excel(f, sheet = "active_days") 
+boat.activity.nw <- 
+  read_excel(f, sheet = "boat_activity", skip = 1) %>% 
+  slice(1:4) %>% 
+  gather(key = date, value = value, -c(site, gear)) %>% 
+  separate(value, c("active", "sampled"), convert = TRUE) %>% 
+  mutate(date = ymd(date))
+boat.activity.se <- 
+  read_excel(f, sheet = "boat_activity", skip = 7) %>% 
+  gather(key = date, value = value, -c(site, gear)) %>% 
+  separate(value, c("active", "sampled"), convert = TRUE) %>% 
+  mutate(date = ymd(date))
+boat.activity <- 
+  bind_rows(boat.activity.nw, boat.activity.se) %>% 
+  filter(!is.na(gear))
+catch <- read_excel(f, "catch_2004_january")
+tr <- 
+  catch %>% 
+  filter(gear %in% "trap")
+i <- nrow(tr)/3
+trip1 <-
+  tr %>% 
+  mutate(variable = rep(c("day", "duration", "total"), i)) %>% 
+  select(tid, variable, misc) %>% 
+  spread(variable, misc)
+hl <-
+  catch %>% 
+  filter(!gear %in% "trap")
+i <- nrow(hl)/2
+trip2 <-
+  hl %>% 
+  mutate(variable = rep(c("day", "total"), i)) %>% 
+  select(tid, variable, misc) %>% 
+  spread(variable, misc) %>% 
+  mutate(duration = 1)
+trip <- 
+  bind_rows(trip1, trip2) %>% 
+  mutate(date = ymd(paste0("2004-1-", day))) %>% 
+  select(tid, date, duration, total)
+catch <-
+  catch %>% 
+  select(-misc)
+```
+
+# Calculations
+
+## Boat activity
+
+```{r}
+bac <-
+  boat.activity %>% 
+  left_join(frame.survey) %>% 
+  mutate(month = month(date)) %>% 
+  group_by(strata, month, gear) %>% 
+  summarise(n_sites = n_distinct(site),
+            n_days = n_distinct(date),
+            active_s = sum(active),
+            sampled_s = sum(sampled),
+            #bac_s = active_s/sampled_s,
+            bac_m = mean(active/sampled),
+            bac_v = var(active/sampled),
+            bac_s = sd(active/sampled),
+            bac_cv = bac_s/bac_m) %>% 
+  ungroup() %>% 
+  select(-month)
+bac %>% 
+  knitr::kable(digits = 3)
+
+trip <-
+  trip %>% 
+  select(-total) %>% 
+  left_join(catch %>% select(tid, site, gear) %>% distinct()) %>% 
+  left_join(frame.survey %>% select(strata, site, gear))
+
+trip %>% 
+  mutate(month = month(date)) %>% 
+  group_by(month, strata, gear) %>% 
+  summarise(sampled.effort = sum(duration))
+
+
+catch22 <-
+  catch %>% 
+  group_by(tid) %>%
+  summarise(catch = sum(wt)) %>% 
+  ungroup() %>% 
+  left_join(trip) %>% 
+  mutate(month = month(date),
+         cpue = catch/duration) %>% 
+  group_by(month, strata, gear) %>% 
+  summarise(sampled.landings = n(),
+            sampled.catch = sum(catch),
+            cpue_m = mean(cpue),
+            cpue_v = var(cpue),
+            cpue_s = sd(cpue),
+            cpue_cv = cpue_s/cpue_m)
+catch22 %>% kable(digits = 2)
+```
+
+```{r}
+normalize <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+x <- c(0:10) 
+x %>% normalize()
+x %>% normalize() %>% mean()
+
+```
+
+Leftovers:
+```{r, eval = FALSE}
+
+
+
+total.boats <-
+  frame.survey %>% 
+  group_by(strata, gear) %>% 
+  summarise(no.boats = sum(total.boat))
+bac <-
+  boat.activity %>% 
+  mutate(month = month(date)) %>% 
+  left_join(frame.survey %>% select(site, strata)) %>% 
+  group_by(strata, month, gear) %>% 
+  summarise(bac = mean(active/sampled),
+            n.sampled = sum(sampled),
+            n.active = sum(active))
+effort <-
+  bac %>%
+  left_join(active.days %>% select(-boats)) %>% 
+  left_join(total.boats) %>% 
+  mutate(effort = bac * days * no.boats)
+effort %>% knitr::kable(digits = 2)
+```
+

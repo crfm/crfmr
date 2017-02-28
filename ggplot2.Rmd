@@ -28,7 +28,7 @@ library(maps)
 library(mapdata)
 ```
 
-Note if you have not installed these package, check the [Intalling](installing.hml)-documentation.
+Note if you have not installed these package, check the [Installing](installing.html)-documentation.
 
 ### Getting example data into R
 

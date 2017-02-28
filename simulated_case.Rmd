@@ -1,0 +1,84 @@
+---
+title: "Active days"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We have a case where the fishing operation by different fleet (e.g. industrial vs small scale) operates
+
+```{r}
+start <- ymd("2000-01-01")
+end <- ymd("2019-12-31")
+
+days <- 
+  data_frame(date = seq(start, end, by = 1)) %>% 
+  mutate(year = year(date),
+         month = month(date),
+         wdayn = wday(date),
+         wday = wday(date, label = TRUE),
+         wdays = ifelse(wdayn %in% c(2:6), TRUE, FALSE),
+         sundays = ifelse(wdayn == 1, TRUE, FALSE))
+
+days %>%
+  group_by(year, month) %>% 
+  summarise(n = n()) %>% 
+  filter(month == 2)
+
+x <-
+  days %>%
+  group_by(year, month) %>% 
+  summarise(n = n(),
+            n.wdays = sum(wdays),
+            n.sundays = sum(sundays),
+            fdays = n - n.sundays)
+```
+
+```{r}
+the.true.mean <- 200
+the.true.sd <- 20
+the.census.n <- 1e3
+the.census <- data_frame(catch = rnorm(n = the.census.n,
+                                       mean = the.true.mean,
+                                       sd = the.true.sd))
+sample.size <- 10
+
+a.sample <-
+  the.census %>% 
+  sample_n(size = sample.size, replace = FALSE)
+
+a.sample %>% 
+  summarise(n = n(),
+            sample.mean = mean(a.sample$catch),
+            sample.var = var(a.sample$catch),
+            sample.sd = sd(a.sample$catch),
+            sample.sd = sample.var/sqrt(n),
+            sample.cv = sample.sd/sample.mean)
+
+accuracy <- function(x) {
+  
+  minimum <- min(x)
+  maximum <- max(x)
+  a <-
+    1 - (x - minimum) / (maximum - minimum)
+  return(a)
+}
+
+a.sample %>% 
+  mutate(a = accuracy(catch))
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
