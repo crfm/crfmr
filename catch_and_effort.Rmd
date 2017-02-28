@@ -206,6 +206,7 @@ cpue %>% kable(digits = 2)
 
 ## Calculation of landings by strata
 
+We have now have the catch and effort by strata in two tables (cpue and effort) which now can be merged and then landings by strata are simple to calculate:
 ```{r}
 landings <-
   cpue %>% 
