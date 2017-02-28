@@ -216,6 +216,48 @@ landings <-
 kable(landings, digits = 2)
 ```
 
+# Recapitulation
+
+The bare minimum coding is given below and is less than 40 lines. If one had more months of data, more gears and more landings site one could still use the same code. Actually with only a minor changes in the code one could calculate effort and landing statistics for multiple years.
+
+```{r}
+bac <-
+  boat.activity %>% 
+  left_join(site) %>% 
+  mutate(month = month(date)) %>% 
+  group_by(month, area, gear) %>% 
+  summarise(bac = mean(active/sampled)) %>% 
+  ungroup()
+fs <- 
+  frame.survey %>% 
+  group_by(area, gear) %>% 
+  summarise(total.boats = sum(total.boat)) %>% 
+  ungroup()
+effort <-
+  bac %>%
+  left_join(fs) %>% 
+  left_join(active.days %>% select(area, gear, days)) %>% 
+  mutate(effort = bac * total.boats * days)
+cpue <-
+  catch %>% 
+  group_by(tid) %>%
+  summarise(catch = sum(wt)) %>% 
+  ungroup() %>% 
+  left_join(trip) %>% 
+  mutate(month = month(date),
+         cpue = catch/duration) %>% 
+  left_join(site) %>% 
+  group_by(month, area, gear) %>% 
+  summarise(cpue = mean(cpue)) %>% 
+  ungroup()
+landings <-
+  cpue %>% 
+  left_join(effort) %>% 
+  mutate(landings = cpue * effort)
+```
+
+
+
 ## Total effort and total landings
 
 Calculation of more aggregated statistics can now be done based on the above calculation. E.g. to calculate the total catch and effort for this single month of data one simply does:
