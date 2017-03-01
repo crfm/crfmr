@@ -15,6 +15,12 @@ Needed library:
 library(tidyverse)
 ```
 
+Note if you have not installed the `tidyverse`-package then if you want to use the `glimpse` function introduced below you at minimum need to load the `dplyr`-package:
+```{r}
+library(dplyr)
+```
+
+
 R is not a database software so one normally has to import the data from some other sources.
 
 ### Entering data directly into R

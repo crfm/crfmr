@@ -67,7 +67,7 @@ The basic strata system in this case example is:
 * Area: Two areas, Northwest (nw) with two sites sampled and Southeast (se) with three sites sampled. There are then additional sites that are not sampled but the number of boats are known from a frame survey.
 * Gear: Two gear categories are in the case example, hook and line and traps.
 
-When calculating catch and effort one normally does this first on the strata basis. Given that we only have one month of data we will estimate 1 month x 2 areas x 2 gear categories of catches and effort (I.e. a total of 4 estimates). These statistics form the basis upon which statistics on a more aggregated level are then calculated.
+When calculating catch and effort one normally does this first on the strata basis. Given that we only have one month of data we will estimate 1 month x 2 areas x 2 gear categories of catches and effort (I.e. a total of 4 sets of estimates). These statistics form the basis upon which statistics on a more aggregated level are then calculated.
 
 ### Downloading the data
 
@@ -90,7 +90,7 @@ frame.survey <-
   read_excel(f, sheet = "frame_survey") %>% 
   gather(key = gear, value = total.boat, -c(area, site))
 active.days <- 
-  read_excel(f, sheet = "active_days") 
+  read_excel(f, sheet = "active_days")
 boat.activity.nw <- 
   read_excel(f, sheet = "boat_activity", skip = 1) %>% 
   slice(1:4) %>% 
@@ -160,10 +160,13 @@ bac <-
             n_days = n_distinct(date),
             active_s = sum(active),
             sampled_s = sum(sampled),
+            n = n(),
             bac_m = mean(active/sampled),
-            bac_v = var(active/sampled),
-            bac_s = sd(active/sampled),
-            bac_cv = bac_s/bac_m) %>% 
+            se = sd(active/sampled)/sqrt(n),
+            cv = se/bac_m) %>% 
+  ungroup() %>% 
+  mutate(bac_lower = bac_m - qt(.975, df = n - 1) * se,
+         bac_upper = bac_m + qt(.975, df = n - 1) * se) %>% 
   ungroup() 
 bac %>% 
   knitr::kable(digits = 3)
@@ -228,14 +231,15 @@ cpue <-
          cpue = catch/duration) %>% 
   left_join(site) %>% 
   group_by(month, area, gear) %>% 
-  summarise(sampled.landings = n(),
-            sampled.catch = sum(catch),
+  summarise(n = n(),
+            catch = sum(catch),
             cpue_m = mean(cpue),
-            cpue_v = var(cpue),
-            cpue_s = sd(cpue),
-            cpue_cv = cpue_s/cpue_m) %>% 
-  ungroup()
-cpue %>% kable(digits = 2)
+            se = sd(cpue)/sqrt(n),
+            cv = se/cpue_m) %>% 
+  ungroup() %>% 
+  mutate(cpue_lower = cpue_m - qt(.975, df = n - 1) * se,
+         cpue_upper = cpue_m + qt(.975, df = n - 1) * se)
+cpue %>% kable(digits = 3)
 ```
 
 ## Calculation of landings by strata
@@ -335,10 +339,48 @@ landings %>%
   kable(digits = 0)
 ```
 
+# On accuracy level
+
+... need to add text
+
+```{r}
+ba <-
+  boat.activity %>% 
+  left_join(site) %>% 
+  group_by(area, gear) %>% 
+  summarise(n.bac = sum(sampled))
+tr <-
+  trip %>%
+  left_join(site) %>% 
+  group_by(area, gear) %>% 
+  summarise(n.cat = n())
+frame.survey %>% 
+  group_by(area, gear) %>%
+  summarise(boats = sum(total.boat)) %>% 
+  left_join(active.days %>% select(area, gear, days)) %>% 
+  mutate(N = boats * days) %>% 
+  left_join(ba) %>% 
+  left_join(tr) %>% 
+  mutate(bac_accuracy_level = round((1 - 1.96 * 0.5/sqrt(n.bac) * sqrt(1 - n.bac/N)) * 100, 3),
+         cat_accuracy_level = round((1 - 1.96 * sqrt((2 * N - 1)/(6 * (N - 1)) - 1/4) / sqrt(n.cat) * sqrt(1 - n.cat/N)) * 100, 3)) %>% 
+  kable()
+```
 
 
 ```{r, eval = FALSE, echo = FALSE}
 # Leftovers
+accuracy_concave <- function(n, N) {
+  if(N >= 1000) {
+    z <- 1.96
+    s_concave = 0.5
+    x <- 1 - z * s_concave/sqrt(n) * sqrt(1 - n/N)
+    return(x)
+  } else {
+    print("not implemented yet for small populations")
+  }
+}
+
+
 
 normalize <- function(x) {
   (x - min(x)) / (max(x) - min(x))
