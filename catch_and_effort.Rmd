@@ -19,24 +19,57 @@ library(knitr)
 
 # Preamble
 
-The following case example is based on data used to illustrate the operation of the [ARTFISH software](http://www.fao.org/fishery/topic/16081/en). The data has been imported into an [Excel workbook](http://www.hafro.is/~einarhj/crfmr/data-raw/artfish.xlsx).
-
 The main objective of this exercise is to demonstrate how total catch and total effort can be estimated in R given sample based fishery-surveys data.
 
-In principle we only need the following to estimate total effort and total landings:
+There are three principal equations in fisheries science needed to solve the whole riddle:
 
-* Effort = (Boat Activity) x (Total boats) x (Active days)
-* Landings = CPUE x Effort
+Catch = Fishing mortality x Biomass
+
+Fishing mortality = catchability x Effort
+
+Catch = CPUE x Effort
+
+Here we will only deal with the last one. It is the most important one, because if one gets that one wrong, the rest of the riddle, which requires additional assumption, will become blatantly wrong.
+
+In a sample based fishery effort is derived from:
+
+* A census-based __Frame Survey__ providing the raising factor __F__ that expresses the total number of boats
+* An __Active Days Survey__ to determine the time raising factor __A__ expressing number of days with fishing activities
+* A sample-based __Boat Activity Survey__ to determine the __BAC__ (Boat Activity Coefficient) expressing the probability that any boat will be active on any given day.
+
+Effort = (Boat Activity) x (Total boats) x (Active days)
+
+or 
+
+Effort = BAC x F x A
+
+Overall cpue is derived from:
+
+* A sample-based __Landing Survey__ to determine sample mean __CPUE__
+
+Hence the generic formula to estimate catch is:
+
+Catch = CPUE x Effort 
+
+or expressed fully:
+
+Catch = CPUE x BAC x F x A
+
+In general these variables are first estimated by each strata and then aggregated as needed.
+
+# The data
+
+The following case example is based on data used to illustrate the operation of the [ARTFISH software](http://www.fao.org/fishery/topic/16081/en). The data has been imported into an [Excel workbook](http://www.hafro.is/~einarhj/crfmr/data-raw/artfish.xlsx).
 
 The basic strata system in this case example is:
 
-* Month: Here we only have one months of data
-* Area: Two areas, Northwest (nw) with two sites sampled and Southeast (se) with three sites sampled
-* Gear: Two gear categories, hook and line and traps.
+* Month: Here we only have one months of data, but then this is just a case example.
+* Area: Two areas, Northwest (nw) with two sites sampled and Southeast (se) with three sites sampled. There are then additional sites that are not sampled but the number of boats are known from a frame survey.
+* Gear: Two gear categories are in the case example, hook and line and traps.
 
-When calculating catch and effort one normally does this first on the strata basis. Given that we only have one month of data we will estimate 1 month x 2 areas x 2 gear categories of catches and effort. These statistics form the basis upon which statistics on a more aggregated level are then calculated.
+When calculating catch and effort one normally does this first on the strata basis. Given that we only have one month of data we will estimate 1 month x 2 areas x 2 gear categories of catches and effort (I.e. a total of 4 estimates). These statistics form the basis upon which statistics on a more aggregated level are then calculated.
 
-## Downloading the data
+### Downloading the data
 
 If you have a "data-raw" directory in you current R working directory one can download the workbook by:
 ```{r, eval = FALSE}
@@ -45,9 +78,9 @@ download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/artfish.xlsx",
               mode = "wb")
 ```
 
-# Tidy data
+### Tidying the data
 
-... explanation of code pending
+... explanation of the tidy code pending
 
 ```{r}
 f <- "data-raw/artfish.xlsx"
@@ -257,11 +290,32 @@ landings <-
   mutate(landings = cpue * effort)
 ```
 
+## Aggregated statistics
 
+Calculation of more aggregated statistics can now be done based on the above calculation.
 
-## Total effort and total landings
+#### By month and area
 
-Calculation of more aggregated statistics can now be done based on the above calculation. E.g. to calculate the total catch and effort for this single month of data one simply does:
+```{r}
+landings %>% 
+  group_by(month, area) %>% 
+  summarise(effort = sum(effort),
+            landings = sum(landings)) %>% 
+  kable(digits = 0)
+```
+
+#### By month and gear
+
+```{r}
+landings %>% 
+  group_by(month, gear) %>% 
+  summarise(effort = sum(effort),
+            landings = sum(landings)) %>% 
+  kable(digits = 0)
+```
+
+#### By month
+
 ```{r}
 landings %>% 
   group_by(month) %>% 
@@ -269,6 +323,19 @@ landings %>%
             landings = sum(landings)) %>% 
   kable(digits = 0)
 ```
+
+#### By year
+
+Well if we had more months we would be doing:
+
+```{r}
+landings %>% 
+  summarise(effort = sum(effort),
+            landings = sum(landings)) %>% 
+  kable(digits = 0)
+```
+
+
 
 ```{r, eval = FALSE, echo = FALSE}
 # Leftovers
