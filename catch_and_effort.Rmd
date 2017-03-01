@@ -38,6 +38,7 @@ When calculating catch and effort one normally does this first on the strata bas
 
 ## Downloading the data
 
+If you have a "data-raw" directory in you current R working directory one can download the workbook by:
 ```{r, eval = FALSE}
 download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/artfish.xlsx",
               destfile = "data-raw/artfish.xlsx",
