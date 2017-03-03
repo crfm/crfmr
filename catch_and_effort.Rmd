@@ -35,9 +35,9 @@ In a sample based fishery effort is derived from:
 
 * A census-based __Frame Survey__ providing the raising factor __F__ that expresses the total number of boats
 * An __Active Days Survey__ to determine the time raising factor __A__ expressing number of days with fishing activities
-* A sample-based __Boat Activity Survey__ to determine the __BAC__ (Boat Activity Coefficient) expressing the probability that any boat will be active on any given day.
+* A sample-based __Boat Activity Survey__ to determine the __BAC__ (Boat Activity Coefficient) expressing the probability that any boat will be n.active on any given day.
 
-Effort = (Boat Activity) x (Total boats) x (Active days)
+Effort = (Boat Activity) x (Total boats) x (n.active days)
 
 or 
 
@@ -64,76 +64,34 @@ The following case example is based on data used to illustrate the operation of 
 The basic strata system in this case example is:
 
 * Month: Here we only have one months of data, but then this is just a case example.
-* Area: Two areas, Northwest (nw) with two sites sampled and Southeast (se) with three sites sampled. There are then additional sites that are not sampled but the number of boats are known from a frame survey.
+* Area: Two areas, Northwest (nw) with two sites n.sampled and Southeast (se) with three sites n.sampled. There are then additional sites that are not n.sampled but the number of boats are known from a frame survey.
 * Gear: Two gear categories are in the case example, hook and line and traps.
 
 When calculating catch and effort one normally does this first on the strata basis. Given that we only have one month of data we will estimate 1 month x 2 areas x 2 gear categories of catches and effort (I.e. a total of 4 sets of estimates). These statistics form the basis upon which statistics on a more aggregated level are then calculated.
 
-### Downloading the data
+### Downloading and importing the data
 
 If you have a "data-raw" directory in you current R working directory one can download the workbook by:
 ```{r, eval = FALSE}
-download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/artfish.xlsx",
-              destfile = "data-raw/artfish.xlsx",
+download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/artfish_tidy.xlsx",
+              destfile = "data-raw/artfish_tidy.xlsx",
               mode = "wb")
 ```
 
-### Tidying the data
-
-... explanation of the tidy code pending
-
+Lets read in all the needed tables (what each contains is explained further below):
 ```{r}
-f <- "data-raw/artfish.xlsx"
-site <- 
-  read_excel(f, sheet = "site")
-frame.survey <- 
-  read_excel(f, sheet = "frame_survey") %>% 
-  gather(key = gear, value = total.boat, -c(area, site))
-active.days <- 
-  read_excel(f, sheet = "active_days")
-boat.activity.nw <- 
-  read_excel(f, sheet = "boat_activity", skip = 1) %>% 
-  slice(1:4) %>% 
-  gather(key = date, value = value, -c(site, gear)) %>% 
-  separate(value, c("active", "sampled"), convert = TRUE) %>% 
+f <- "data-raw/artfish_tidy.xlsx"
+site <- read_excel(f, "site")
+active.days <- read_excel(f, "active_days")
+frame.survey <- read_excel(f, "frame_survey")
+boat.activity <-
+  read_excel(f, "boat_activity") %>% 
   mutate(date = ymd(date))
-boat.activity.se <- 
-  read_excel(f, sheet = "boat_activity", skip = 7) %>% 
-  gather(key = date, value = value, -c(site, gear)) %>% 
-  separate(value, c("active", "sampled"), convert = TRUE) %>% 
+trip <-
+  read_excel(f, "trip") %>% 
   mutate(date = ymd(date))
-boat.activity <- 
-  bind_rows(boat.activity.nw, boat.activity.se) %>% 
-  filter(!is.na(gear))
-catch <- read_excel(f, "catch_2004_january")
-tr <- 
-  catch %>% 
-  filter(gear %in% "trap")
-i <- nrow(tr)/3
-trip1 <-
-  tr %>% 
-  mutate(variable = rep(c("day", "duration", "total"), i)) %>% 
-  select(tid, variable, misc) %>% 
-  spread(variable, misc)
-hl <-
-  catch %>% 
-  filter(!gear %in% "trap")
-i <- nrow(hl)/2
-trip2 <-
-  hl %>% 
-  mutate(variable = rep(c("day", "total"), i)) %>% 
-  select(tid, variable, misc) %>% 
-  spread(variable, misc) %>% 
-  mutate(duration = 1)
-trip <- 
-  bind_rows(trip1, trip2) %>% 
-  mutate(date = ymd(paste0("2004-1-", day))) %>% 
-  select(tid, date, duration) %>% 
-  left_join(catch %>% select(tid, site, gear) %>% distinct()) %>%
-  select(tid, date, site, gear, duration)
-catch <-
-  catch %>% 
-  select(tid, species, wt, no, price)
+catch <- 
+  read_excel(f, "catch")
 ```
 
 # Calculations
@@ -145,8 +103,8 @@ The boat activity is stored in the boat.activity table. It has five columns:
 * __site__: The name of the landing site
 * __gear__: The name of the gear
 * __date__: Date of sampling
-* __sampled__: Number of boats sampled
-* __active__: Number of boats that were active
+* __n.active__: Number of boats that were active
+* __n.sampled__: Number of boats sampled
 
 The strata area are is not stored in boat activity table but can be obtained from the `site` dataframe and merged to the table via `left_join`-function. Once done we can set the strata-grouping using the `group_by`-function and calculate various statistics. The statistics of primary interest is the boat activity coefficient (bac), which basically is the probability that a boat within a strata has gone fishing. The simplest way is to calculate the mean from the raw observations. And since we have the mean we can also calculate various additional statistic that represent the variability in the data.
 
@@ -158,11 +116,11 @@ bac <-
   group_by(month, area, gear) %>% 
   summarise(n_sites = n_distinct(site),
             n_days = n_distinct(date),
-            active_s = sum(active),
-            sampled_s = sum(sampled),
+            active_s = sum(n.active),
+            sampled_s = sum(n.sampled),
             n = n(),
-            bac_m = mean(active/sampled),
-            se = sd(active/sampled)/sqrt(n),
+            bac_m = mean(n.active/n.sampled),
+            se = sd(n.active/n.sampled)/sqrt(n),
             cv = se/bac_m) %>% 
   ungroup() %>% 
   mutate(bac_lower = bac_m - qt(.975, df = n - 1) * se,
@@ -179,14 +137,15 @@ Besides BAC we need to know the total number of boats within each strata, such d
 * __site__: The name of the landing site
 * __area__: The name of the strata area for the site
 * __gear__: The name of the gear
-* __total.boat__: The number of boats
+* __n.boats__: The number of boats
 
-We obtain the sum of the boats for the strata by simply doing:
+We obtain the sum of the boats for the strata by using the frame survey and obtaining the area strata from the site table:
 ```{r}
 fs <- 
   frame.survey %>% 
+  left_join(site) %>% 
   group_by(area, gear) %>% 
-  summarise(total.boats = sum(total.boat))
+  summarise(n.boats = sum(n.boats))
 ```
 
 The number of active days by the strata is stored in the `active.days`-table. We simply merge the three tables containing the bac, total number of boats boats and active days in the month, using the `left_join`-function and once done we can calculate the total effort given the equation above:
@@ -196,7 +155,7 @@ effort <-
   select(month, area, gear, bac = bac_m) %>% 
   left_join(fs) %>% 
   left_join(active.days %>% select(area, gear, days)) %>% 
-  mutate(effort = bac * total.boats * days)
+  mutate(effort = bac * n.boats * days)
 kable(effort, digits = 2)
 ```
 
@@ -205,7 +164,7 @@ kable(effort, digits = 2)
 In order to calculate the catch per unit effort we need merge information from the trip and the catch tables. The trip table has the following columns:
 
 * __tid__: A unique trip identifier
-* __date__: The date the trip was sampled
+* __date__: The date the trip was n.sampled
 * __site__: The landing site name
 * __gear__: The name of the gear used
 * __duration__: The number of days fishing
@@ -213,9 +172,9 @@ In order to calculate the catch per unit effort we need merge information from t
 The catch table has the following columns:
 
 * __tid__: A trip identifier (links to the trip table tid)
-* __species__: The name of the species sampled
+* __species__: The name of the species n.sampled
 * __wt__: The weight of the sample (here in kg)
-* __no__: The number of fish sampled
+* __no__: The number of fish n.sampled
 * __price__: The selling price
 
 Here we calculate the total cpue per trip, ignoring the species. We hence need to sum the catch of all the species in each trip before we join the data with the trip information. Once done we calculate the cpue for each trip, join the data to the site table (to get the strata area) and then calculate the summary statistic for each strata:
@@ -264,18 +223,19 @@ bac <-
   left_join(site) %>% 
   mutate(month = month(date)) %>% 
   group_by(month, area, gear) %>% 
-  summarise(bac = mean(active/sampled)) %>% 
+  summarise(bac = mean(n.active/n.sampled)) %>% 
   ungroup()
 fs <- 
   frame.survey %>% 
+  left_join(site) %>% 
   group_by(area, gear) %>% 
-  summarise(total.boats = sum(total.boat)) %>% 
+  summarise(n.boats = sum(n.boats)) %>% 
   ungroup()
 effort <-
   bac %>%
   left_join(fs) %>% 
   left_join(active.days %>% select(area, gear, days)) %>% 
-  mutate(effort = bac * total.boats * days)
+  mutate(effort = bac * n.boats * days)
 cpue <-
   catch %>% 
   group_by(tid) %>%
@@ -348,15 +308,16 @@ ba <-
   boat.activity %>% 
   left_join(site) %>% 
   group_by(area, gear) %>% 
-  summarise(n.bac = sum(sampled))
+  summarise(n.bac = sum(n.sampled))
 tr <-
   trip %>%
   left_join(site) %>% 
   group_by(area, gear) %>% 
   summarise(n.cat = n())
 frame.survey %>% 
+  left_join(site) %>% 
   group_by(area, gear) %>%
-  summarise(boats = sum(total.boat)) %>% 
+  summarise(boats = sum(n.boats)) %>% 
   left_join(active.days %>% select(area, gear, days)) %>% 
   mutate(N = boats * days) %>% 
   left_join(ba) %>% 
@@ -392,22 +353,22 @@ x %>% normalize() %>% mean()
 
 
 
-total.boats <-
+n.boatss <-
   frame.survey %>% 
   group_by(strata, gear) %>% 
-  summarise(no.boats = sum(total.boat))
+  summarise(no.boats = sum(n.boats))
 bac <-
   boat.activity %>% 
   mutate(month = month(date)) %>% 
   left_join(frame.survey %>% select(site, strata)) %>% 
   group_by(strata, month, gear) %>% 
-  summarise(bac = mean(active/sampled),
-            n.sampled = sum(sampled),
-            n.active = sum(active))
+  summarise(bac = mean(n.active/n.sampled),
+            n.n.sampled = sum(n.sampled),
+            n.n.active = sum(n.active))
 effort <-
   bac %>%
-  left_join(active.days %>% select(-boats)) %>% 
-  left_join(total.boats) %>% 
+  left_join(n.active.days %>% select(-boats)) %>% 
+  left_join(n.boatss) %>% 
   mutate(effort = bac * days * no.boats)
 effort %>% knitr::kable(digits = 2)
 ```
