@@ -7,56 +7,26 @@ output: html_document
 
 Data are often not in tidy format ....
 
-Note that when we here refer to tidy data it is not the same thing as "data cleaning". The latter deals specifically with correcting typos.
+Note that when we here refer to tidying data it is not the same thing as "data cleaning". The latter deals specifically with correcting typos.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE)
 ```
 
+Needed libraries:
 ```{r}
 library(tidyverse)
+library(readxl)
 ```
 
-## Gather
-
-Datasets are often arranged in a wide format, mainly because it is more readable for humans. Take e.g. this dataset representing catches by gear by year:
-```{r, echo = FALSE}
-catch <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
+```{r, echo = FALSE, eval = FALSE}
+# data generation
+wide <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
                  year = rep(c(2001, 2002), 3),
                  catch = c(500, 750, 400, 600, 20, 20)) %>% 
   spread(year, catch)
-```
-
-```{r}
-catch
-```
-
-Here the column names represent a variable name (year) and it contains the actual value (2001 and 2002). And in each row we have observation of catches in two rows not one.
-
-To tidy dataset such as these we use the `gather`-function:
-
-```{r}
-catch %>% 
-  gather(key = year, value = catch, `2001`:`2002`)
-```
-
-Here we selected the year columns and give it the (key) variable name "year" and then the actual values are given the variable name "catch".
-
-Note that we could also have used a negative value for the selection of column:
-```{r, eval = FALSE}
-# not run
-catch %>% 
-  gather(key = year, value = catch, -gear)
-```
-
-In the above we basically select all columns (to gather) except the species column.
-
-## Spread
-
-`spread` is the exact opposite of `gather`, i.e. takes the data from a long format to a wide format.
-
-```{r, echo = FALSE}
+write_csv(wide, "data-raw/tidy/wide.csv")
 catch <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
                  year = rep(c(2001, 2002), 3),
                  value = c(500, 750, 400, 600, 20, 20)) %>% 
@@ -66,21 +36,74 @@ effort <-
                  year = rep(c(2001, 2002), 3),
                  value = c(100, 150, 200, 300, 50, 25)) %>% 
   mutate(type = "effort")
-df <- 
+long <- 
   bind_rows(catch, effort) %>% 
   select(gear, year, type, value) %>% 
   arrange(gear, year, type)
+write_csv(long, "data-raw/tidy/long.csv")
 ```
 
-```{r}
-df
+## The data
+
+We are going to use some very simple data here, just to cover the basic of the tidyr-functions. They are stored in an excel workbook, called [tidyr.xlsx](http://www.hafro.is/~einarhj/crfmr/data-raw/tidyr.xlsx). Please have a look at the different sheets. To get the data we use the `download.file`-function (I assume that you have a directory named data-raw within you current R working directory):
+```{r, eval = FALSE}
+download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/tidyr.xlsx",
+              destfile = "data-raw/tidyr.xlsx",
+              mode = "wb")
 ```
 
-In the example above an observation is a gear in a year, but each observation is spread across two rows, where the numerical value have different meanings. We can spread these values across the two types as follows:
+
+## Gather
+
+Datasets are often arranged in a wide format, mainly because it is more readable for humans. Take e.g. this dataset representing catches by gear by year:
+
 ```{r}
-df %>% 
-  spread(type, value)
+wide <- read_excel("data-raw/tidy/tidyr.xlsx", "wide")
+wide
 ```
+
+Here the column names represent a variable name (year) and it contains the actual value (2001 and 2002). And in each row we have observation of catches in two rows not one.
+
+To tidy dataset such as these we use the `gather`-function:
+
+```{r}
+wide %>% 
+  gather(key = year, value = catch, `2001`:`2002`)
+```
+
+Here we specified that the key was year because the column names we are trying to gather store the value for the variable year and then the actual values are given the variable name "catch".
+
+Note that we could also have used a negative value for the selection of column:
+```{r, eval = FALSE}
+# not run
+wide %>% 
+  gather(key = year, value = catch, -gear)
+```
+
+In the above we basically select all columns (to gather) except the gear column.
+
+The acute eye may have spotted that the year is actually a character. There is an optional argument in `gather` called convert. The default is set to FALSE. If we overwrite the default and set it to TRUE, the function "tries to" to convert the variable to appropriate class:
+```{r}
+wide %>% 
+  gather(year, catch, -gear, convert = TRUE)
+```
+
+## Spread
+
+`spread` is the exact opposite of `gather`, i.e. takes the data from a long format to a wide format. Lets import a datatable of a long format:
+
+```{r}
+long <- read_excel("data-raw/tidy/tidyr.xlsx", "long")
+long
+```
+
+In the example above an observation is catch and effort by a gear and year, but each observation is spread across two rows, where the numerical value have different meanings. We can spread these values across the two types as follows:
+```{r}
+long %>% 
+  spread(key = type, value = value)
+```
+
+Here we specified that the variable key (catch and effort) which we want to be separate column was stored in the column "type" and that the actual measuments were stored in the column "value". 
 
 ## Separate
 
