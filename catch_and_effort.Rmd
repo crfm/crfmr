@@ -249,7 +249,7 @@ We have now have the catch and effort by strata in two tables (cpue and effort) 
 landings <-
   cpue %>% 
   select(month, area, gear, cpue = cpue_m) %>% 
-  left_join(effort) %>% 
+  left_join(effort %>% select(month, area, gear, effort)) %>% 
   mutate(landings = cpue * effort)
 kable(landings, digits = 2)
 ```

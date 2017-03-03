@@ -17,6 +17,8 @@ library(XLConnect)
 library(lubridate)
 library(stringr)
 source("R/read_high_seas_functions.R")
+library(maps)
+m <- map_data("world")
 ```
 
 ### Read in the data
@@ -34,7 +36,6 @@ catch1 <-
 daily.record1 <- 
   res1$daily.record %>% 
   mutate(ship = "Marinherio")
-
 ```
 
 Lets see what we got:
@@ -106,7 +107,7 @@ catch22 <-
   catch %>% 
   filter(!is.na(weight)) %>% 
   left_join(d) %>%
-  filter(is.na(year))
+  filter(is.na(year)) %>% 
   group_by(year, month, QuadCd, lat1, lon1, species) %>% 
   summarise(catch = sum(weight)) %>% 
   spread(species, catch)
@@ -131,7 +132,7 @@ sum(STO3$Effort1)
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 x <-
   data_raw %>% 
   tbl_df() %>% 
@@ -148,8 +149,7 @@ x2 <-
   select(date, lon, lat, ship) %>% 
   distinct() %>% 
   filter(!is.na(lon), !is.na(lat))
-library(maps)
-m <- map_data("world")
+
 ggplot() +
   theme_bw() +
   geom_polygon(data = m, aes(long, lat, group = group), fill = "grey") +
@@ -268,7 +268,7 @@ nrow(d)
 ```
 
 Square system
-```{r}
+```{r, eval = FALSE}
 x <-
   data_raw %>% 
   tbl_df() %>% 
@@ -298,7 +298,7 @@ df %>%
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 tmp <-
   data_raw %>% 
   select(date:lon, ship) %>% 
