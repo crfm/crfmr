@@ -5,7 +5,7 @@ output: html_document
 
 ## Preamble
 
-Data are often not in tidy format ....
+Raw data are often not in a tidy format. The __tidyr__-package has a number of functions that are specifically designed to deal with restructuring untidy dataframes. Here only three commonly used functions will be introduced,  `gather`, `spread` and `separate` by using very simple examples. Additional examples of use are provided in some of the case examples. And then a more thorough account is given in chapter 12 in [R for Data Science](http://r4ds.had.co.nz/tidy-data.html).
 
 Note that when we here refer to tidying data it is not the same thing as "data cleaning". The latter deals specifically with correcting typos.
 
@@ -26,7 +26,7 @@ wide <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
                  year = rep(c(2001, 2002), 3),
                  catch = c(500, 750, 400, 600, 20, 20)) %>% 
   spread(year, catch)
-write_csv(wide, "data-raw/tidy/wide.csv")
+write_csv(wide, "data-raw/tidyr/wide.csv")
 catch <- data_frame(gear = rep(c("hook", "line", "nets"), each = 2),
                  year = rep(c(2001, 2002), 3),
                  value = c(500, 750, 400, 600, 20, 20)) %>% 
@@ -40,7 +40,16 @@ long <-
   bind_rows(catch, effort) %>% 
   select(gear, year, type, value) %>% 
   arrange(gear, year, type)
-write_csv(long, "data-raw/tidy/long.csv")
+write_csv(long, "data-raw/tidyr/long.csv")
+# for separate
+d <- data_frame(lon = round(runif(100, min = -5, max = 15), 4),
+                lat = round(runif(100, min = 53, max = 57), 4)) %>% 
+  mutate(ns = ifelse(lon >= 0, "N", "S"),
+         ew = "W",
+         lon = paste(abs(lon), ns),
+         lat = paste(abs(lat), ew)) %>% 
+  select(lon, lat)
+write_csv(d, "data-raw/tidyr/separate.csv")
 ```
 
 ## The data
@@ -58,7 +67,7 @@ download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/tidyr.xlsx",
 Datasets are often arranged in a wide format, mainly because it is more readable for humans. Take e.g. this dataset representing catches by gear by year:
 
 ```{r}
-wide <- read_excel("data-raw/tidy/tidyr.xlsx", "wide")
+wide <- read_excel("data-raw/tidyr.xlsx", "wide")
 wide
 ```
 
@@ -90,10 +99,10 @@ wide %>%
 
 ## Spread
 
-`spread` is the exact opposite of `gather`, i.e. takes the data from a long format to a wide format. Lets import a datatable of a long format:
+`spread` is the opposite of `gather`, i.e. takes the data from a long format to a wide format. Lets import a dataframe of a long format:
 
 ```{r}
-long <- read_excel("data-raw/tidy/tidyr.xlsx", "long")
+long <- read_excel("data-raw/tidyr.xlsx", "long")
 long
 ```
 
@@ -103,9 +112,38 @@ long %>%
   spread(key = type, value = value)
 ```
 
-Here we specified that the variable key (catch and effort) which we want to be separate column was stored in the column "type" and that the actual measuments were stored in the column "value". 
+Here we specified that the variable key (catch and effort) which we want to be separate column was stored in the column "type" and that the actual measurements were stored in the column "value".
 
 ## Separate
 
-... to be added
+We may often need to separate one column into multiple columns. Take e.g. these VMS data:
+```{r}
+vms <- read_excel("data-raw/tidyr.xlsx", "vms")
+vms
+```
+
+Here we have a mix of numbers and text, the text characters "S", "N" and "W" referring to South, North and West. An as it stand, given that the columns are of class character, we can not do any numerical analysis or plotting of the data. Here `separate` comes to the rescue. The argument it takes is the name of the column we want to separate and the name of the columns we want to split the data into, and the separator:
+
+```{r}
+vms %>% 
+  separate(longitude, c("lon", "NS"), sep = " ") %>% 
+  separate(latitude, c("lat", "EW"), sep = " ")
+```
+
+Notice that we still have the lons and lats as character vector. Here we could set the additional argument convert  to TRUE:
+```{r}
+vms %>% 
+  separate(longitude, c("lon", "NS"), sep = " ", convert = TRUE) %>% 
+  separate(latitude, c("lat", "EW"), sep = " ", convert = TRUE)
+```
+
+So now we have the data in a tidy format. We could simplify this further, because when we start analyzing the data we would use a negative coordinate for western longitude and southern latitudes:
+```{r}
+vms %>% 
+  separate(longitude, c("lon", "NS"), sep = " ", convert = TRUE) %>% 
+  separate(latitude, c("lat", "EW"), sep = " ", convert = TRUE) %>% 
+  mutate(lon = ifelse(NS == "S", -lon, lon),
+         lat = ifelse(EW == "W", -lat, lat)) %>% 
+  select(lon, lat)
+```
 
