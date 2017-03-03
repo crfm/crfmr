@@ -48,8 +48,8 @@ ___
 * [Reading in data from structured Excel sheets](importing_excel_data_101.html)
 
 * Tidying data
-    - [Case example 1](tidyr_case1.html)
-    - Case example 2
+    - Case example 1 ... pending
+    - [Case example 2](tidyr_case2.html)
     
 
 * Model fitting in R

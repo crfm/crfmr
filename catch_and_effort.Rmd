@@ -59,7 +59,7 @@ In general these variables are first estimated by each strata and then aggregate
 
 # The data
 
-The following case example is based on data used to illustrate the operation of the [ARTFISH software](http://www.fao.org/fishery/topic/16081/en). The data has been imported into an [Excel workbook](http://www.hafro.is/~einarhj/crfmr/data-raw/artfish.xlsx).
+The following case example is based on data used to illustrate the operation of the [ARTFISH software](http://www.fao.org/fishery/topic/16081/en). The data has been stored an Excel workbook called [Artfish_tidy.xlsx](http://www.hafro.is/~einarhj/crfmr/data-raw/artfish_tidy.xlsx).
 
 The basic strata system in this case example is:
 
@@ -148,7 +148,15 @@ fs <-
   summarise(n.boats = sum(n.boats))
 ```
 
-The number of active days by the strata is stored in the `active.days`-table. We simply merge the three tables containing the bac, total number of boats boats and active days in the month, using the `left_join`-function and once done we can calculate the total effort given the equation above:
+The number of active days by the strata is stored in the `active.days`-table that contains the following columns:
+
+* __area__: The area strata
+* __gear__: The gear name
+* __year__: The year
+* __month__: The month
+* __days__: The number of expected days fishing (trap fishery not taking place on Sundays)
+
+We simply merge the three tables containing the bac, total number of boats and active days in the month, using the `left_join`-function and once done we can calculate the total effort given the equation above:
 ```{r}
 effort <-
   bac %>%
