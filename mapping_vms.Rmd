@@ -1,0 +1,100 @@
+---
+title: "Mapping effort from vms"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+### Preamble
+
+One of the element of ecosystem based approach to fisheries is to provide a detailed map of the actual distribution of fishing, in particular the potential destructive bottom trawl fisheries. In the eye of the public bottom trawling has a very negative "image". This is part because the perception is that the activity occur indiscriminantly and uniformly over the ocean floor. This perception is wrong because fishing is in general aggregated in space and occurs mostly on soft substratum. In addition physical energy from currents, tidal forcing and river flow may often exert higher disturbance engergy than that coming from anthopogenic activities.
+
+Enough of that, here we will demonstrate one can map fishing effort in space based on vms-data.
+
+### Needed libraries and functions
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(viridis)
+library(ggmap)
+source("R/get_arcgis.R")
+```
+
+### Read in the data
+
+Note that because of confidencility, the data is not distributed.
+
+```{r}
+vms <-
+  read_delim("data-raw/suriname/data-raw/vms/Seabob data jan-dec 2013.txt",
+             delim = "\t")
+names(vms)[1] <- "vessel"
+```
+
+An example of some 10 lines out of `r nrow(vms)` records:
+```{r}
+vms %>% 
+  filter(Speed > 0) %>% 
+  slice(1000:1010) %>% 
+  select(Date, Longitude, Latitude, Speed, Heading) %>% 
+  knitr::kable()
+```
+
+### Tidiying the data
+
+The VMS data are in a relatively clean format. However the geographical coordinates are a mixture of numerical and text values (see above). The numerical values are also in the form of degrees, minutes and seconds (and fraction of a second). What we want is that all the data are expressed in degrees and fraction of degrees. For convenience we generate a function which we can later call within the `mutate`-function:
+```{r}
+clean_coordinates <- function(x) {
+  y <-
+    data_frame(coord = x) %>% 
+    separate(coord, c("ddmm", "rest"), sep = "'", remove = FALSE) %>%
+    separate(rest, c("ss", "q"), sep = " ", convert = TRUE) %>% 
+    mutate(ddmm = ifelse(nchar(ddmm) == 3, paste0("0", ddmm), ddmm)) %>% 
+    separate(ddmm, c("dd", "mm"), 2, convert = TRUE) %>% 
+    mutate(res = dd + mm/60 + ss/(60 * 60),
+           res = ifelse(q == "W" | q == "S", -res, res))
+  return(y$res)
+}
+```
+
+In addition we may also want to rename some of the variable and change the date from being a character string into a time-date format.
+```{r}
+vms <-
+  vms  %>% 
+  mutate(lon = clean_coordinates(Longitude),
+         lat = clean_coordinates(Latitude)) %>% 
+  ungroup()
+```
+
+### Summarise the pings
+```{r}
+effort <-
+  vms %>%
+  filter(Speed >= 3,
+         Speed <= 4.5,
+         lat > 6.05) %>% 
+  mutate(lon = round(lon, 2),
+         lat = round(lat, 2)) %>% 
+  group_by(lon, lat) %>% 
+  summarise(no.pings = n())
+```
+
+### Get a backround map
+```{r}
+m <- get_arcgismap(bbox = c(left  = -56, bottom = 5.5,
+                            right = -54, top    = 6.6),
+                   zoom = 9)
+```
+
+### Plot the effort distribution
+
+```{r}
+m + 
+  geom_raster(data = effort %>% filter(no.pings > 3), aes(lon, lat, fill = no.pings)) +
+  scale_fill_viridis(option = "B", trans = "reverse") +
+  coord_quickmap()
+```
+
