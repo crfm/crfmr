@@ -80,18 +80,9 @@ If you do not already have the __data-raw__ directory, you can create it from wi
 dir.create("data-raw")
 ```
 
-What has happened is that a new directory has been generated on your computer hard drive (check out for yourself). And if it already existed, don't worry nothing has changed on your hard drive, you would only get a R-warning like this:
-
-```
-Warning message:
-In dir.create("data-raw") : 'data-raw' already exists
-```
-
-Meaning that the existing directory is still intact - nothing has changed.
+What has happened is that a new directory has been generated on your computer hard drive (check out for yourself). And then you have to re-run the `download.file` command above. Again, once you have downloaded the file onto your computer you do not need to repeat the above command.
 
 One could of course also have downloaded the [iccat_codes.xlsx](http://www.hafro.is/~einarhj/crfmr/data-raw/iccat_codes.xlsx) with the usual point-and-mouse-click method. But by using an R-script one makes the whole process fully reproducible (what is done is written in the code itself).
-
-And then you have to run the `download.file` code above. Again, once you have downloaded the file onto your computer you do not need to repeat the above command.
 
 ## Reading a tidy Excel sheet into R
 

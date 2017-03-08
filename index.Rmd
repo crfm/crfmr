@@ -23,7 +23,7 @@ The CRFM fisheries scientists community (current focus is the Data and Methods W
 ## The basis
 ___
 
-There are plenty of good books available on R. What follows in only some basic instructions to get people started.
+There are plenty of good books available on R. With respect to the scope of this project I strongly recommend [R for Data Science](http://r4ds.had.co.nz) by Garrett Grolemund and Hadley Wickham. It covers the art of data visualization, data importing, munging and reporting. The documents below are only serving as a quick starter with emphasis of using data from fisheries.
 
 * [Installing R, RStudio and packages](installing.html)
 
@@ -51,12 +51,11 @@ ___
     - Case example 1 ... pending
     - [Case example 2](tidyr_case2.html)
     
+* [Estimating catch and effort](catch_and_effort.html)
 
 * Model fitting in R
     - A gentle introduction
     - [Standarization of cpue series](glm.html)
-
-* [Estimating catch and effort](catch_and_effort.html)
 
 * [Cleaning data](cleaning.html)
 
