@@ -7,3 +7,5 @@ not_used
 stvincent
 suriname
 rep
+data-raw/*.xlsx
+data-raw/example-ca.csv

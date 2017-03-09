@@ -37,7 +37,7 @@ There are plenty of good books available on R. With respect to the scope of this
 
 * [Grammar of data manipulation - short note on tidyr](tidyr_introduction.html)
 
-* ...
+* [RStudio projects and knowing where you are](rstudio_projects.html)
 
 * ...
 

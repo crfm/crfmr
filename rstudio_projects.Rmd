@@ -1,0 +1,89 @@
+---
+title: "Working in RStudio projects & knowing where you are"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# On RStudio projects
+
+I strongly recommend that when working in R that you work within the framework of RStudio project. That way you divide your "work into multiple contexts, each with their own working directory, workspace, history, and source documents" (for detailed information see [Using Projects](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects)).
+
+# On directory structure
+
+I strongly recommend that within each project you keep similar directory structure. What structure you adopt is based on personal preference. My approach has been to have the following standard directories:
+
+* __data-raw__: A directory that contains csv, txt, excel files etc. that are __specfic to the prjoect__ and that need to be __imported__ into R via appropriate `read`-function. These data may be untidy and/or unclean. You may want to have subdirectory within this directories, e.g. if you have a large project with disparate data sources.
+    - I emphasized above that the directory is specific to external data that are specific to the project. If you have data that are used in multiple project you would of course store those in another space. To access them from within a project see the section below on "Knowing your way around".
+* __R__: A directory that contains R scripts or functions that you read via the `source`-function (see further discussion below).
+* __data__: A directory that contains R binary files (see further discussion below)
+* __img__: Any external figures that can not be produced within R.
+* __doc__: Any external documentation that may be associated with the project
+
+I then generally used the root directory of a project to store R markdown source documents (document with the extension .Rmd). As an example take a look at the directory structure of the project upon which these webpages you are reading are based ([crfmr](https://github.com/crfm/crfmr)).
+
+# Sourcing R-scripts
+
+to be added ...
+
+# R binary data
+
+to be added ...
+
+# Knowing your way around
+
+R being primarily a [Scripting language](https://en.wikipedia.org/wiki/Scripting_language) one does not access files through use of the mouse-click approch. That is if one wants to stick with having reproducable code.
+
+Within R there is always a specified working directory. The current working directory can always be obtained by the `getwd`-function:
+
+```{r}
+getwd()
+```
+
+Now to get information of what is in the R working directory one can use the `dir`-function:
+```{r}
+dir()
+```
+
+The equivalent path from the computer root directory (in windose that is normally mapped as "__C:__") would be (not run):
+
+```{r, eval = FALSE}
+dir("/home/haf/einarhj/prj2/crfmr")
+```
+
+Within R one can "move around" using either ___absolute__ or __relative__ path. E.g if one wants to get information of what is in a sub-directory one can do (that is an absolute path):
+```{r}
+dir("/home/haf/einarhj/prj2/crfmr/data-raw")
+
+```
+
+The equivalent relative path from current R working directory is then (not run):
+
+```{r, eval = FALSE}
+dir("data-raw")
+```
+
+If one wants to obtain what is in the directory above the current R working (absolute path):
+
+```{r}
+dir("/home/haf/einarhj/prj2")
+```
+
+The equivalent relative path given the current R working directory is obtained by the use a double dot ("__..__"), (not run):
+
+```{r, eval = FALSE}
+dir("..")
+```
+
+One could get information of what is in two directories up from the current R working directory using (relative path):
+```{r}
+dir("../..")
+```
+
+Which is the same using the absolute path (not run):
+```{r, eval = FALSE}
+dir("/home/haf/einarhj")
+```
+
