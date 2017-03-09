@@ -1,0 +1,84 @@
+---
+title: "Artfish Island"
+subtitle: January 2004 landing report
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      error = FALSE)
+```
+
+```{r}
+MONTH <- 1 # User input that can be changed
+```
+
+
+## Some heading
+
+bla, bla, bla, bla, ...
+
+
+```{r, }
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(stringr)
+library(knitr)
+
+f <- "data-raw/artfish_tidy.xlsx"
+site <- read_excel(f, "site")
+active.days <- read_excel(f, "active_days")
+frame.survey <- read_excel(f, "frame_survey")
+boat.activity <-
+  read_excel(f, "boat_activity") %>% 
+  mutate(date = ymd(date))
+trip <-
+  read_excel(f, "trip") %>% 
+  mutate(date = ymd(date))
+catch <- 
+  read_excel(f, "catch")
+bac <-
+  boat.activity %>% 
+  left_join(site) %>% 
+  mutate(month = month(date)) %>% 
+  group_by(month, area, gear) %>% 
+  summarise(bac = mean(n.active/n.sampled)) %>% 
+  ungroup()
+fs <- 
+  frame.survey %>% 
+  left_join(site) %>% 
+  group_by(area, gear) %>% 
+  summarise(n.boats = sum(n.boats)) %>% 
+  ungroup()
+effort <-
+  bac %>%
+  left_join(fs) %>% 
+  left_join(active.days %>% select(area, gear, days)) %>% 
+  mutate(effort = bac * n.boats * days)
+cpue <-
+  catch %>% 
+  group_by(tid) %>%
+  summarise(catch = sum(wt)) %>% 
+  ungroup() %>% 
+  left_join(trip) %>% 
+  mutate(month = month(date),
+         cpue = catch/duration) %>% 
+  left_join(site) %>% 
+  group_by(month, area, gear) %>% 
+  summarise(cpue = mean(cpue)) %>% 
+  ungroup()
+landings <-
+  cpue %>% 
+  select(month, area, gear, cpue) %>% 
+  left_join(effort %>% select(month, area, gear, effort)) %>% 
+  mutate(landings = cpue * effort) %>% 
+  filter(month == MONTH)
+kable(landings, digits = 2,
+      caption = "January 2004: Effort and landings by area and gear")
+```
+

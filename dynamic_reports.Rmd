@@ -1,0 +1,50 @@
+---
+title: "Reproducable reports"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown documents (.Rmd)
+
+R Markdown is an authoring format that combines the syntax of markdown and embedded R code chunks and allows for the generation of reproducible documents (.html, .pdf or .docx formats). These documents are fully reproducible, meaning that they can be automatically regenerated whenever the data changes or when the R code is changed.
+
+The easiest way to get an initial feel for this process is to open up an .Rmd document by:
+
+> File > New File > New Rmarkdown ...
+
+and select "Document". By doing so one opens up a default document that contains some examples. Save it by giving it some name and then press the "Knit"-button. What happens is that the __source__ document (.Rmd) is convert to an HTML-document where the markdown part of the document (I the actual text) is appropriately formatted and the embedded R-code is executed.
+
+One can choose among three types of output when "knitting" an .Rmd document, HTML, PDF and Word. To see this in action repeat the above process using the same .Rmd document but click on the down arrow on the right side of the "Knit"-button and select "Knit to Word".
+
+# A case example
+
+Here a crude version of a practical case example of a monthly statistical report is emulated using the Artfish-data. Although not necessary, it is recommended that you first go through the case example on [Estimating catch and effort](http://www.hafro.is/~einarhj/crfmr/catch_and_effort.html).
+
+First download and save the [source document](http://www.hafro.is/~einarhj/crfmr/monthly_landing_report.Rmd). This is most easily done by:
+```{r}
+download.file("http://www.hafro.is/~einarhj/crfmr/monthly_landing_report.Rmd",
+              destfile = "monthly_landing_report.Rmd")
+```
+and then open it from within RStudio.
+
+The only thing that requires a user input is in the R-code chunk called "user_input" located in lines 15 to 19. Here one could change the month (that is to say if there are more data than just January - which is not the case for the Artfish-data). The rest of the code is of no concern for the "end user" - it is basically doing the same thing as was introduced in the case example [Estimating catch and effort](http://www.hafro.is/~einarhj/crfmr/catch_and_effort.html). If you have already gone through that example you should already have the needed data on your computer ("data-raw/artfish_tidy.xlsx"). If not run this code:
+```{r, eval = FALSE}
+download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/artfish_tidy.xlsx",
+              destfile = "data-raw/artfish_tidy.xlsx",
+              mode = "wb")
+```
+
+Once the month is selected (to reiterate, lines 15 to 19 in source document) one would only need to press the "Knit"-button and a new monthly report is generated. The default output is set to PDF-format (see example [here](http://www.hafro.is/~einarhj/crfmr/monthly_landing_report.pdf)). I suspect that you do not yet have the necessary programs to get that output so for now change the output format to Word (click the down-arrow to the right of the "Knit"-button and select "Knit to Word").
+
+Of course one may want to replace the current text with something more useful, modify the code, possibly add some graphs, etc. The key thing here is that in the final output the R-code that is not presented.
+
+# Further reading
+
+See [R Markdown - Dynamic Documents for R](https://support.rstudio.com/hc/en-us/articles/205368677-R-Markdown-Dynamic-Documents-for-R), in particular:
+
+* [Markdown Basics](http://rmarkdown.rstudio.com/authoring_basics.html)
+* [R Markdown Reference Guide](http://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf)
+* [R Code Chunks](http://rmarkdown.rstudio.com/authoring_rcodechunks.html)

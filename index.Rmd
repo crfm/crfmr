@@ -26,40 +26,25 @@ ___
 There are plenty of good books available on R. With respect to the scope of this project I strongly recommend [R for Data Science](http://r4ds.had.co.nz) by Garrett Grolemund and Hadley Wickham. It covers the art of data visualization, data importing, munging and reporting. The documents below are only serving as a quick starter with emphasis of using data from fisheries.
 
 * [Installing R, RStudio and packages](installing.html)
-
 * [Getting data into R](importing.html)
-
 * [Grammar of data visualization - staring with ggplot2](ggplot2.html)
-
 * [Grammar of data manipulation - starting with dplyr](dplyr.html)
-
 * [Combining data manipulation and visualization](more_grammar.html)
-
 * [Grammar of data manipulation - short note on tidyr](tidyr_introduction.html)
-
 * [RStudio projects and knowing where you are](rstudio_projects.html)
 
-* ...
-
-### Case examples
+## Case examples
 ___
 
 
 * [Reading in data from structured Excel sheets](importing_excel_data_101.html)
-
 * Tidying data
     - Case example 1 ... pending
     - [Case example 2](tidyr_case2.html)
-    
 * [Estimating catch and effort](catch_and_effort.html)
-
+* [Dynamic reports](dynamic_reports.html)
 * Model fitting in R
     - A gentle introduction
     - [Standarization of cpue series](glm.html)
-
 * [Cleaning data](cleaning.html)
-
 * ...
-
-* ...
-

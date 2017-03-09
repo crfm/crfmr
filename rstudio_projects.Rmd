@@ -9,7 +9,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # On RStudio projects
 
-I strongly recommend that when working in R that you work within the framework of RStudio project. That way you divide your "work into multiple contexts, each with their own working directory, workspace, history, and source documents" (for detailed information see [Using Projects](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects)).
+I strongly recommend that when working in R that you work within the framework of RStudio __project__. That way you divide your "work into multiple contexts, each with their own working directory, workspace, history, and source documents".
+
+To start a new project do: "File" > "New Project" ... and select either "New Directory" or "Exisiting Directory".
+
+To open up an existing project do: "File" > "Open Project ..." or "File" > "Recent Projects"
+
+For detailed information see [Using Projects](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects).
 
 # On directory structure
 
