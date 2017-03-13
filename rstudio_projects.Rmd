@@ -30,14 +30,6 @@ I strongly recommend that within each project you keep similar directory structu
 
 I then generally used the root directory of a project to store R markdown source documents (document with the extension .Rmd). As an example take a look at the directory structure of the project upon which these webpages you are reading are based ([crfmr](https://github.com/crfm/crfmr)).
 
-# Sourcing R-scripts
-
-to be added ...
-
-# R binary data
-
-to be added ...
-
 # Knowing your way around
 
 R being primarily a [Scripting language](https://en.wikipedia.org/wiki/Scripting_language) one does not access files through use of the mouse-click approch. That is if one wants to stick with having reproducable code.
@@ -59,27 +51,26 @@ The equivalent path from the computer root directory (in windose that is normall
 dir("/home/haf/einarhj/prj2/crfmr")
 ```
 
-Within R one can "move around" using either ___absolute__ or __relative__ path. E.g if one wants to get information of what is in a sub-directory one can do (that is an absolute path):
-```{r}
+Within R one can "move around" using either ___absolute__ or __relative__ path. E.g if one wants to get information of what is in a sub-directory one can do (that is an absolute path - not run):
+```{r, eval = FALSE}
 dir("/home/haf/einarhj/prj2/crfmr/data-raw")
-
 ```
 
-The equivalent relative path from current R working directory is then (not run):
+The equivalent relative path from current R working directory is then:
 
-```{r, eval = FALSE}
+```{r}
 dir("data-raw")
 ```
 
-If one wants to obtain what is in the directory above the current R working (absolute path):
+If one wants to obtain what is in the directory above the current R working (absolute path - not run):
 
-```{r}
+```{r, eval = FALSE}
 dir("/home/haf/einarhj/prj2")
 ```
 
-The equivalent relative path given the current R working directory is obtained by the use a double dot ("__..__"), (not run):
+The equivalent relative path given the current R working directory is obtained by the use a double dot ("__..__"):
 
-```{r, eval = FALSE}
+```{r}
 dir("..")
 ```
 
@@ -92,4 +83,13 @@ Which is the same using the absolute path (not run):
 ```{r, eval = FALSE}
 dir("/home/haf/einarhj")
 ```
+
+# Sourcing R-scripts
+
+to be added ...
+
+# R binary data
+
+to be added ...
+
 

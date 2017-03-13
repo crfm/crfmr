@@ -46,5 +46,6 @@ ___
 * Model fitting in R
     - A gentle introduction
     - [Standarization of cpue series](glm.html)
+* [Mapping effort distribution from VMS data](mapping_vms.html) - pending permission
 * [Cleaning data](cleaning.html)
 * ...

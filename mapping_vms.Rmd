@@ -9,9 +9,9 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ### Preamble
 
-One of the element of ecosystem based approach to fisheries is to provide a detailed map of the actual distribution of fishing, in particular the potential destructive bottom trawl fisheries. In the eye of the public bottom trawling has a very negative "image". This is part because the perception is that the activity occur indiscriminantly and uniformly over the ocean floor. This perception is wrong because fishing is in general aggregated in space and occurs mostly on soft substratum. In addition physical energy from currents, tidal forcing and river flow may often exert higher disturbance engergy than that coming from anthopogenic activities.
+One of the element of ecosystem based approach to fisheries is to provide a detailed map of the actual distribution of fishing, in particular the potential destructive bottom trawl fisheries. In the eye of the public bottom trawling has a very negative "image". This is part because the perception is that the activity occur indiscriminately and uniformly over the ocean floor. This perception is wrong because fishing is in general aggregated in space and bottom trawling occurs mostly on soft substratum. In addition physical energy from currents, tidal forcing and river flow may often exert higher disturbance energy than that coming from anthropogenic activities.
 
-Enough of that, here we will demonstrate one can map fishing effort in space based on vms-data.
+Enough of the preamble, here we will demonstrate one can map fishing effort in space based on vms-data.
 
 ### Needed libraries and functions
 
@@ -25,9 +25,9 @@ source("R/get_arcgis.R")
 
 ### Read in the data
 
-Note that because of confidencility, the data is not distributed.
+Note that because of confidentiality, the data is not distributed.
 
-```{r}
+```{r, echo = FALSE}
 vms <-
   read_delim("data-raw/suriname/data-raw/vms/Seabob data jan-dec 2013.txt",
              delim = "\t")
@@ -45,22 +45,30 @@ vms %>%
 
 ### Tidiying the data
 
-The VMS data are in a relatively clean format. However the geographical coordinates are a mixture of numerical and text values (see above). The numerical values are also in the form of degrees, minutes and seconds (and fraction of a second). What we want is that all the data are expressed in degrees and fraction of degrees. For convenience we generate a function which we can later call within the `mutate`-function:
+The VMS data are in a relatively clean format. However the geographical coordinates are a mixture of numerical and text values (see above). The numerical values are also in the form of degrees, minutes and seconds (and fraction of a second). What we want is that all the data are expressed in degrees and fraction of degrees. For convenience we generate a function which we can later call within the `mutate`-function (explanation of the code is provide within the code chunk):
 ```{r}
 clean_coordinates <- function(x) {
   y <-
-    data_frame(coord = x) %>% 
+    data_frame(coord = x) %>%
+    # use the ' character to split the data
     separate(coord, c("ddmm", "rest"), sep = "'", remove = FALSE) %>%
+    # use the " " (space) to separate the seconds from the rest
     separate(rest, c("ss", "q"), sep = " ", convert = TRUE) %>% 
-    mutate(ddmm = ifelse(nchar(ddmm) == 3, paste0("0", ddmm), ddmm)) %>% 
+    # Add a zero in front of degrees if the value is less than 10
+    mutate(ddmm = ifelse(nchar(ddmm) == 3, paste0("0", ddmm), ddmm)) %>%
+    # split ddmm into two parts, dd (degrees) and mm (minutes)
     separate(ddmm, c("dd", "mm"), 2, convert = TRUE) %>% 
+    # generate decimal degrees
     mutate(res = dd + mm/60 + ss/(60 * 60),
+           # if latitude is west or if longitude is south set decimal
+           #   degrees to a negative value
            res = ifelse(q == "W" | q == "S", -res, res))
+  # return only the res(ulting) vector
   return(y$res)
 }
 ```
 
-In addition we may also want to rename some of the variable and change the date from being a character string into a time-date format.
+We use the function above to change the Longitude and Latitude into decimal degrees:
 ```{r}
 vms <-
   vms  %>% 
@@ -69,20 +77,67 @@ vms <-
   ungroup()
 ```
 
+An example of what we now have:
+```{r, echo = FALSE}
+vms %>% 
+  filter(Speed > 0) %>% 
+  slice(1000:1010) %>% 
+  select(Date, lon, lat, Speed) %>% 
+  knitr::kable()
+```
+
+
 ### Summarise the pings
+
+The next step is to filter the VMS-data so that we only have pings that truly constitute fishing. We can look at the distribution of 
+
 ```{r}
-effort <-
+vms %>% 
+  filter(Speed > 0) %>% 
+  ggplot(aes(Speed)) +
+  geom_histogram(binwidth = 1)
+```
+
+We see that there are two peaks in the distribution, one with a narrow hump with a mode around 6 knots and one with a broad hump with mode around 13 knots. The former is associated with fishing, the latter with cruising.
+
+Now what we are interested in is to plot where fishing does occur. We would thus need at minimum to get rid of all the speed that higher than 9 knots. Speeds less that 3 knots are also likely something else than actual trawling activity. And then the fisheries scientist general knowledge is that no fishing takes place south of 6.05 degrees north. Hence we filter the data accordingly:
+
+```{r}
+vms <-
   vms %>%
   filter(Speed >= 3,
-         Speed <= 4.5,
-         lat > 6.05) %>% 
+         Speed < 9,
+         lat > 6.05)
+```
+
+We are next interested to generate some kind of "a grid" where we count the number of VMS-pings within some coordinate resolution. Here we opt to just round the coordinates to two decimal numbers, and then group by those rounded values and count the number of pings:
+```{r}
+effort <-
+  vms %>% 
   mutate(lon = round(lon, 2),
          lat = round(lat, 2)) %>% 
   group_by(lon, lat) %>% 
   summarise(no.pings = n())
 ```
 
+The data have now been "condensed" (we only have `r nrow(effort)` records) and the data look like this:
+```{r}
+glimpse(effort)
+```
+
+The __no.pings__ stands for the number of pings within each of the grid-corrdinates, the higher the value the more recording of fishing effort has occured at the particular coorinate. The distribution of pings among the grid-coordinates is:
+```{r}
+effort %>% 
+  ggplot() +
+  geom_histogram(aes(no.pings), binwidth = 1)
+```
+
+We see that we have a very scewed distribution, with a lot of grid cells with only 1, 2 or 3 pings and then only a few grid cells where the number of pings (read: effort) is higher than, lets say 10. This is a classical distribution of effort, at least of bottom trawling gear. It is highly aggregated. Now, some may argue that in grid cells where pings are fewer than lets say 4 does not constitute actual fishing because the recorded Speed is instantaneous measurement and hence sensitive to boat movements on the rough seas at any one time. We will filter those data further down the line when we plot the data.
+
 ### Get a backround map
+
+Before we do that we need to get some background images. Here we will use the `get_arcgismap`-function that was "sourced" in the first code step in this document (see above). You do not need to know the intricacy of what is done, only that you can specify the limits of the map by specifying the boundaries using decimal degrees:
+
 ```{r}
 m <- get_arcgismap(bbox = c(left  = -56, bottom = 5.5,
                             right = -54, top    = 6.6),
@@ -91,10 +146,18 @@ m <- get_arcgismap(bbox = c(left  = -56, bottom = 5.5,
 
 ### Plot the effort distribution
 
+What is now left is just to overlay the effort dataframe over the map. 
+
 ```{r}
 m + 
   geom_raster(data = effort %>% filter(no.pings > 3), aes(lon, lat, fill = no.pings)) +
   scale_fill_viridis(option = "B", trans = "reverse") +
   coord_quickmap()
 ```
+
+What we observe is:
+
+* Bottom trawling is limited to a narrow band offshore, most likely associated with a depth contour or potentially some current boundary.
+* There are primarily two major fishing areas, west and east of the main river.
+* The fishing activity in the western area is more aggregated that on the eastern area.
 

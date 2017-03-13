@@ -1,5 +1,5 @@
 ---
-title: "Reproducable reports"
+title: "Dynamic reports"
 output: html_document
 ---
 
@@ -39,7 +39,7 @@ download.file(url = "http://www.hafro.is/~einarhj/crfmr/data-raw/artfish_tidy.xl
 
 Once the month is selected (to reiterate, lines 15 to 19 in source document) one would only need to press the "Knit"-button and a new monthly report is generated. The default output is set to PDF-format (see example [here](http://www.hafro.is/~einarhj/crfmr/monthly_landing_report.pdf)). I suspect that you do not yet have the necessary programs to get that output so for now change the output format to Word (click the down-arrow to the right of the "Knit"-button and select "Knit to Word").
 
-Of course one may want to replace the current text with something more useful, modify the code, possibly add some graphs, etc. The key thing here is that in the final output the R-code that is not presented.
+Of course one may want to replace the current text with something more useful, modify the code, possibly add some graphs, etc. The content is though not the key message of this case example, only the fundamental technique that lies behind the reproducible report writing.
 
 # Further reading
 
