@@ -29,9 +29,9 @@ In a sample based fishery effort is normally derived from:
 
 * A census-based __Frame Survey__ providing the raising factor __F__ that expresses the total number of boats
 * An __Active Days Survey__ to determine the time raising factor __A__ expressing number of days with fishing activities
-* A sample-based __Boat Activity Survey__ to determine the __BAC__ (Boat Activity Coefficient) expressing the probability that any boat will be n.active on any given day.
+* A sample-based __Boat Activity Survey__ to determine the __BAC__ (Boat Activity Coefficient) expressing the probability that any boat will be active on any given day.
 
-Effort = (Boat Activity) x (Total boats) x (n.active days)
+Effort = (Boat Activity) x (Total boats) x (Active days)
 
 or 
 
